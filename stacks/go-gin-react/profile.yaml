@@ -1,0 +1,65 @@
+name: go-gin-react
+display_name: "Go (Gin) + React"
+description: "Go 后端 Domain 分层（types→config→repository→service→handler→router）+ Next.js/Vite React 前端"
+
+# 后端声明
+backend:
+  language: go
+  code_skill: code-backend
+  module_dir: "internal/domain/{module}"
+  layering: "types→config→repository→service→handler→router"
+  conventions_ref: "docs/references/go-conventions.md"
+  baseline_check: "scripts/baseline-check.sh"
+  contract_sync: "scripts/contract-sync.sh"
+  integration_test: "scripts/integration-test.sh"
+  build_cmd: "go build ./..."
+  lint_cmd: "golangci-lint run"
+  coverage:
+    service: 80
+    handler: 70
+
+# 前端声明
+frontend:
+  language: typescript
+  code_skill: code-frontend
+  module_dir: "src/app/{module}"
+  conventions_ref: "docs/references/nextjs-conventions.md"
+  integration_test: "scripts/integration-test-frontend.sh"
+  build_cmd: "npm run build"
+  lint_cmd: "npx next lint"
+
+# 契约格式
+contract:
+  format: openapi
+  path: "docs/api-specs/{module}.yaml"
+  shared_path: null
+
+# UI 能力
+ui: optional
+
+# 目录初始化
+scaffold:
+  dirs:
+    - "internal/domain"
+    - "src/app"
+    - "docs/api-specs"
+    - "docs/modules"
+    - "docs/requirements"
+    - "docs/design-docs/adr"
+    - "docs/design-specs"
+    - "docs/plans"
+    - "docs/references"
+    - "docs/templates"
+    - "docs/ui-prototypes"
+    - ".harness/tasks"
+    - ".harness/artifacts"
+    - ".harness/logs"
+    - ".harness/reports"
+  files: []
+
+# 能力开关
+capabilities:
+  has_backend: true
+  has_frontend: true
+  has_contract: true
+  has_ui: true

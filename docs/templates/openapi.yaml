@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: "[模块名称] API"
+  version: 0.1.0
+  description: |
+    [模块名称] 的模块级 OpenAPI 契约。
+
+    本文件是对外 HTTP 接口的唯一真相，需求文档和架构文档仅保留摘要与跳转。
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+tags:
+  - name: "[module-name]"
+    description: "[模块名称] endpoints"
+paths:
+  /api/v1/[resource]:
+    get:
+      tags: ["[module-name]"]
+      summary: "[读取资源摘要]"
+      operationId: "[operationId]"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      required: [code, message, data]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          example: 40001
+        message:
+          type: string
+          example: 请求参数错误

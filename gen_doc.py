@@ -1,0 +1,515 @@
+#!/usr/bin/env python3
+"""Generate the pipeline flow doc HTML."""
+
+# Split into parts to build the full HTML
+parts = []
+
+# Part 1: Head + Hero + TOC + Overview
+parts.append('''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harness Pipeline — 完整流水线流程文档</title>
+<style>
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2236;--border:#2a3554;--text:#e2e8f0;--muted:#94a3b8;--accent:#06b6d4;--accent2:#8b5cf6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--pink:#ec4899}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.hero{background:linear-gradient(135deg,#0f172a,#1e1b4b 50%,#0f172a);border-bottom:1px solid var(--border);padding:60px 40px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(6,182,212,.08) 0%,transparent 50%),radial-gradient(circle at 70% 50%,rgba(139,92,246,.08) 0%,transparent 50%)}
+.hero h1{font-size:2.4rem;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative}
+.hero .sub{color:var(--muted);margin-top:12px;font-size:1.05rem;position:relative}
+.hero .meta{display:flex;justify-content:center;gap:24px;margin-top:20px;position:relative;flex-wrap:wrap}
+.hero .meta span{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;font-size:.85rem;color:var(--muted)}
+.c{max-width:1200px;margin:0 auto;padding:40px 24px 80px}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;margin-bottom:48px}
+.toc h2{font-size:1.1rem;color:var(--accent);margin-bottom:16px}
+.toc ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px}
+.toc a{color:var(--muted);text-decoration:none;padding:4px 0;display:flex;align-items:center;gap:8px;font-size:.9rem;transition:color .2s}
+.toc a:hover{color:var(--accent)}
+.toc .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--surface2);border-radius:6px;font-size:.75rem;font-weight:600;flex-shrink:0}
+.sec{margin-bottom:56px}
+.sh{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.sn{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;font-size:1.1rem;font-weight:700;flex-shrink:0}
+.sn.d{background:rgba(6,182,212,.15);color:var(--accent)}
+.sn.a{background:rgba(245,158,11,.15);color:var(--amber)}
+.sn.c{background:rgba(139,92,246,.15);color:var(--accent2)}
+.sn.t{background:rgba(16,185,129,.15);color:var(--green)}
+.sn.m{background:rgba(236,72,153,.15);color:var(--pink)}
+.sn.r{background:rgba(99,102,241,.15);color:#818cf8}
+.sn.p{background:rgba(6,182,212,.15);color:var(--accent)}
+.st{font-size:1.5rem;font-weight:600}
+.st .cmd{display:inline-block;padding:2px 10px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);border-radius:6px;font-size:.85rem;font-family:'SF Mono','Fira Code',monospace;color:var(--accent);margin-left:10px;vertical-align:middle}
+.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.ic{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.ic .lb{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ic .vl{font-size:.95rem;font-weight:500}
+.tag{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.8rem;font-weight:500;margin-right:4px;margin-bottom:4px}
+.ty{background:rgba(16,185,129,.15);color:var(--green)}
+.tn{background:rgba(100,116,139,.15);color:#94a3b8}
+.ts{background:rgba(139,92,246,.15);color:var(--accent2);font-family:monospace}
+.fb{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:24px;overflow-x:auto}
+.fb h3{font-size:1rem;color:var(--muted);margin-bottom:16px}
+.fd{font-family:'SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.8;white-space:pre;color:var(--muted);overflow-x:auto}
+.fd .hl{color:var(--accent);font-weight:600}
+.fd .ap{color:var(--amber);font-weight:600}
+.fd .pr{color:var(--accent2);font-weight:600}
+.tb{margin-bottom:24px}
+.tb h3{font-size:1rem;color:var(--text);margin-bottom:12px}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:.88rem}
+thead th{background:var(--surface2);padding:12px 16px;text-align:left;font-weight:600;font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+tbody td{padding:10px 16px;border-bottom:1px solid rgba(42,53,84,.5);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+td .pa{font-family:'SF Mono','Fira Code',monospace;font-size:.8rem;color:var(--green);word-break:break-all}
+.bd{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.78rem;font-weight:500}
+.b-go{background:rgba(0,173,216,.15);color:#00add8}
+.b-ts{background:rgba(49,120,198,.15);color:#3178c6}
+.b-md{background:rgba(255,255,255,.08);color:var(--muted)}
+.b-yml{background:rgba(236,72,153,.15);color:var(--pink)}
+.b-ht{background:rgba(245,158,11,.15);color:var(--amber)}
+.steps{margin-bottom:24px}
+.steps h3{font-size:1rem;margin-bottom:12px}
+.sl{counter-reset:s;list-style:none}
+.sl li{counter-increment:s;padding:8px 0 8px 40px;position:relative;color:var(--muted);font-size:.9rem}
+.sl li::before{content:counter(s);position:absolute;left:0;top:8px;width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:var(--muted)}
+.sl li.pu::before{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:var(--amber)}
+.ab{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:20px 24px;margin:24px 0}
+.ab h3{color:var(--amber);font-size:1rem;margin-bottom:12px}
+.eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.ec{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.ec .en{font-family:monospace;font-weight:600;color:var(--accent2);font-size:.9rem;margin-bottom:8px}
+.ec .ed{color:var(--muted);font-size:.85rem}
+.su{font-size:1.15rem;margin-bottom:16px;margin-top:24px}
+@media print{body{background:#fff;color:#1a1a2e}.hero{background:#f8fafc;border-bottom:2px solid #e2e8f0}.hero h1{-webkit-text-fill-color:#0f172a}.toc,.ic,.fb,table,.ab,.ec{background:#fff;border-color:#e2e8f0}.sn{background:#f1f5f9!important}}
+</style>
+</head>
+<body>
+<div class="hero">
+<h1>Harness Pipeline 完整流程文档</h1>
+<p class="sub">AI 自动化产研流水线 · 全环节 Skills、输入输出与执行逻辑</p>
+<div class="meta">
+<span>&#128197; 2026-03-25</span><span>&#128295; 15 个 Skills</span><span>&#128203; 9 个流水线环节</span><span>&#128100; 3 个人类审批节点</span>
+</div></div>
+<div class="c">
+<div class="toc"><h2>&#128218; 目录</h2><ul>
+<li><a href="#s0"><span class="n">0</span> 全局概览与流程图</a></li>
+<li><a href="#s1"><span class="n">1</span> 需求分析 /analyze</a></li>
+<li><a href="#s2"><span class="n">2</span> 架构设计 /architect</a></li>
+<li><a href="#s3"><span class="n">3</span> UI 设计 /design-ui</a></li>
+<li><a href="#s4"><span class="n">4</span> 编码 /code-go + /code-frontend</a></li>
+<li><a href="#s5"><span class="n">5</span> 测试 /test</a></li>
+<li><a href="#s6"><span class="n">6</span> 代码审查 /review</a></li>
+<li><a href="#s7"><span class="n">7</span> 创建 PR</a></li>
+<li><a href="#s8"><span class="n">8</span> 熵值扫描 /entropy</a></li>
+<li><a href="#se"><span class="n">+</span> Extension Skills 汇总</a></li>
+<li><a href="#st"><span class="n">&#128279;</span> 产出物全链路追踪</a></li>
+</ul></div>''')
+
+# Part 2: Overview + Flow Diagram
+parts.append('''
+<div class="sec" id="s0">
+<div class="sh"><div class="sn p">0</div><div class="st">全局概览与流程图</div></div>
+<div class="ig">
+<div class="ic"><div class="lb">流水线类型</div><div class="vl">端到端自动化产研流水线（需求 &#8594; PR）</div></div>
+<div class="ic"><div class="lb">技术栈</div><div class="vl">Go 后端 + React Next.js 前端</div></div>
+<div class="ic"><div class="lb">编排 Skill</div><div class="vl"><span class="tag ts">/pipeline</span></div></div>
+<div class="ic"><div class="lb">人类审批节点</div><div class="vl"><span class="tag ty">需求确认</span><span class="tag ty">架构审批</span><span class="tag ty">设计审批</span></div></div>
+</div>
+<div class="fb"><h3>&#128203; 完整流程图</h3><div class="fd">&#29992;&#25143;&#38656;&#27714; &#10230;&#10230; <span class="hl">[Pipeline /pipeline &#32534;&#25490;]</span>
+                    |
+                    v
+            +---------------+
+            | 0. &#22522;&#32447;&#26816;&#26597;   | &lt;- /entropy&#65288;&#36719;&#37327;&#24555;&#26816;&#65289;
+            +-------+-------+
+                    v
+            +---------------+     +------------------------------+
+            | 1. &#38656;&#27714;&#20998;&#26512;   |----&gt;| <span class="hl">/analyze</span>                     |
+            +-------+-------+     |  Ext: autonomous-coding-harness|
+                    |             |  Ext: modular-vibe-coding      |
+                    v             +------------------------------+
+            +---------------+
+            | <span class="ap">&#9208; &#20154;&#31867;&#23457;&#25209; #1</span>  | &lt;- &#38656;&#27714;&#30830;&#35748;
+            +-------+-------+
+                    v
+            +---------------+     +------------------------------+
+            | 2. &#26550;&#26500;&#35774;&#35745;   |----&gt;| <span class="hl">/architect</span>                    |
+            +-------+-------+     |  Ext: modular-vibe-coding      |
+                    |             +------------------------------+
+                    v
+            +---------------+
+            | <span class="ap">&#9208; &#20154;&#31867;&#23457;&#25209; #2</span>  | &lt;- &#26550;&#26500;&#23457;&#25209;
+            +-------+-------+
+                    v
+            +---------------+     +------------------------------+
+            | 3. UI &#35774;&#35745;    |----&gt;| <span class="hl">/design-ui</span>                    |
+            +-------+-------+     |  Ext: frontend-design         |
+                    |             +------------------------------+
+                    v
+            +---------------+
+            | <span class="ap">&#9208; &#20154;&#31867;&#23457;&#25209; #3</span>  | &lt;- &#35774;&#35745;&#23457;&#25209;
+            +-------+-------+
+                    v
+        +-----------------------+
+        | 4. &#32534;&#30721;&#65288;&#24182;&#34892;&#65289;        |
+        |  +--------+ +--------+ |   Ext: autonomous-coding-harness
+        |  |<span class="pr">/code-go</span>| |<span class="pr">/code-  | |   Ext: modular-vibe-coding
+        |  |        | |frontend| |   Ext: tdd-workflow
+        |  +--------+ |        | |   Ext: verification-loop
+        |             |        | |   Ext: nextjs-patterns
+        |             +--------+ |
+        +-----------+-----------+
+                    v
+            +---------------+     +------------------------------+
+            | 5. &#27979;&#35797;       |----&gt;| <span class="hl">/test</span>                        |
+            +-------+-------+     |  Ext: tdd-workflow            |
+                    |             |  Ext: verification-loop       |
+                    v             +------------------------------+
+            +---------------+     +------------------------------+
+            | 6. &#20195;&#30721;&#23457;&#26597;   |----&gt;| <span class="hl">/review</span>                       |
+            +-------+-------+     |  Ext: verification-loop       |
+                    |             +------------------------------+
+                    v
+            +---------------+
+            | 7. &#21019;&#24314; PR    |
+            +---------------+
+
+  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  &#25345;&#32493;&#30417;&#25511;&#65288;&#29420;&#31435;&#36816;&#34892;&#65292;&#23450;&#26102;/&#25163;&#21160;&#35302;&#21457;&#65289;&#65306;
+
+            +---------------+     +------------------------------+
+            | 8. &#29190;&#20540;&#25195;&#25551;   |----&gt;| <span class="hl">/entropy</span>                       |
+            +---------------+     +------------------------------+</div></div>
+</div>''')
+
+# Part 3: Section 1 - Analyze
+parts.append('''
+<div class="sec" id="s1">
+<div class="sh"><div class="sn d">1</div><div class="st">&#38656;&#27714;&#20998;&#26512; <span class="cmd">/analyze</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">&#36164;&#28145;&#38656;&#27714;&#20998;&#26512;&#19987;&#23478;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag ty">&#10004; &#38656;&#27714;&#30830;&#35748;</span></div></div>
+<div class="ic"><div class="lb">&#21069;&#32622;&#20381;&#36182;</div><div class="vl">&#26080;</div></div>
+<div class="ic"><div class="lb">Extension Skills</div><div class="vl"><span class="tag ts">autonomous-coding-harness</span><span class="tag ts">modular-vibe-coding</span></div></div>
+</div>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26126;</th></tr></thead><tbody>
+<tr><td>&#29992;&#25143;&#21407;&#22987;&#38656;&#27714;</td><td>&#29992;&#25143;&#36755;&#20837;</td><td>&#33258;&#28982;&#35821;&#35328;&#25551;&#36848;&#30340;&#21151;&#33021;&#38656;&#27714;</td></tr>
+<tr><td>&#29616;&#26377;&#27169;&#22359;&#32467;&#26500;</td><td class="pa">docs/design-docs/architecture.md</td><td>&#36991;&#20813;&#37325;&#22797;&#65292;&#35782;&#21035;&#20381;&#36182;</td></tr>
+<tr><td>&#38656;&#27714;&#25991;&#26723;&#27169;&#26495;</td><td class="pa">docs/templates/requirement.md</td><td>&#36755;&#20986;&#26684;&#24335;&#35268;&#33539;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26126;</th></tr></thead><tbody>
+<tr><td>&#38656;&#27714;&#25991;&#26723;</td><td class="pa">docs/requirements/&lt;module&gt;.md</td><td><span class="bd b-md">Markdown</span></td><td>&#32972;&#26223;&#30446;&#26631;&#12289;&#21151;&#33021;&#33539;&#22260;&#12289;&#25968;&#25454;&#27169;&#22411;&#33509;&#26696;&#12289;API &#23450;&#32422;&#33509;&#26696;&#12289;&#38169;&#35823;&#30721;&#12289;&#39564;&#25910;&#26631;&#20934;</td></tr>
+<tr><td>&#20219;&#21153;&#29366;&#24577;&#25991;&#20214;</td><td class="pa">.harness/tasks/req-&lt;module&gt;.yaml</td><td><span class="bd b-yml">YAML</span></td><td>status: waiting_approval</td></tr>
+<tr><td>&#27169;&#22359;&#32034;&#24341;&#26356;&#26032;</td><td class="pa">docs/modules/_index.md</td><td><span class="bd b-md">Markdown</span></td><td;&#36861;&#21152;&#27169;&#22359;&#26465;&#30446;</td></tr>
+</tbody></table></div>
+<div class="ab"><h3>&#9208; &#20154;&#31867;&#23457;&#25209; #1&#65306;&#38656;&#27714;&#30830;&#35748;</h3><table><thead><tr><th>&#20154;&#31867;&#25805;&#20316;</th><th>&#27969;&#27700;&#32447;&#34892;&#20026;</th></tr></thead><tbody>
+<tr><td><b>&#30830;&#35748; / &#36890;&#36807;</b></td><td>&#26356;&#26032; approval_status &#8594; approved&#65292;&#32487;&#32493;&#36827;&#20837;&#26550;&#26500;&#35774;&#35745;</td></tr>
+<tr><td><b>&#25552;&#20986;&#20462;&#25913;&#24847;&#35265;</b></td><td>&#37325;&#26032;&#35843;&#29992; /analyze &#20256;&#20837;&#20462;&#25913;&#24847;&#35265;&#65292;&#20877;&#27425;&#25552;&#20132;&#23457;&#25209;</td></tr>
+<tr><td><b>&#39539;&#22238;</b></td><td>&#26356;&#26032; status &#8594; failed&#65292;&#32456;&#27490;&#27969;&#27745;&#32447;</td></tr>
+</tbody></table></div>
+<div class="steps"><h3>&#25191;&#34892;&#27493;&#39588;</h3><ol class="sl">
+<li>&#29702;&#35299;&#29992;&#25143;&#38656;&#27714;&#65288;&#27169;&#31946;&#21017;&#20027;&#21160;&#36861;&#38382;&#20851;&#38190;&#20449;&#24687;&#65289;</li>
+<li>&#20998;&#26512;&#38656;&#27714;&#65292;&#25286;&#35299;&#21151;&#33021;&#27169;&#22359;&#65292;&#35782;&#21035;&#20381;&#36182;&#20851;&#31995;</li>
+<li>&#22522;&#20110;&#27169;&#26495;&#29983;&#25104;&#38656;&#27714;&#25991;&#26723;&#65288;6 &#22823;&#31456;&#33410;&#65289;</li>
+<li>&#23450;&#20041; API &#23450;&#32422;&#33509;&#26696;&#21644;&#25968;&#25454;&#27169;&#22411;&#33509;&#26696;</li>
+<li>&#23450;&#20041;&#38169;&#35823;&#30721;&#65288;5 &#20301;&#25968;&#23383;&#65306;&#21069; 3 &#20301; HTTP &#29366;&#24577;&#30721; + &#21518; 2 &#20301;&#32454;&#20998;&#65289;</li>
+<li>&#26356;&#26032;&#20219;&#21153;&#29366;&#24577;&#25991;&#20214;&#21644;&#27169;&#22359;&#32034;&#24341;</li>
+<li class="pu">&#9208; &#26242;&#20572;&#65292;&#31561;&#24453;&#20154;&#31867;&#30830;&#35748;&#38656;&#27714;</li>
+</ol></div></div>''')
+
+# Part 4: Section 2 - Architect
+parts.append('''
+<div class="sec" id="s2">
+<div class="sh"><div class="sn d">2</div><div class="st">&#26550;&#26500;&#35774;&#35745; <span class="cmd">/architect</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">&#36164;&#28145;&#26550;&#26500;&#35774;&#35745;&#19987;&#23478;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag ty">&#10004; &#26550;&#26500;&#23457;&#25209;</span></div></div>
+<div class="ic"><div class="lb">&#21069;&#32622;&#20381;&#36182;</div><div class="vl">/analyze &#38656;&#27714;&#24050;&#23457;&#25209;&#36890;&#36807;</div></div>
+<div class="ic"><div class="lb">Extension Skills</div><div class="vl"><span class="tag ts">modular-vibe-coding</span></div></div>
+</div>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26126;</th></tr></thead><tbody>
+<tr><td>&#38656;&#27714;&#25991;&#26723;</td><td>.harness/tasks/ &#20013;&#30340; output_path</td><td>&#35835;&#21462;&#24050;&#23457;&#25209;&#30340;&#38656;&#27714;&#25991;&#26723;</td></tr>
+<tr><td>&#20840;&#23616;&#26550;&#26500;&#25991;&#26723;</td><td class="pa">docs/design-docs/architecture.md</td><td>&#23545;&#40784;&#31995;&#32479;&#25972;&#20307;&#26550;&#26500;</td></tr>
+<tr><td>Go &#32534;&#30721;&#35268;&#33539;</td><td class="pa">docs/references/go-conventions.md</td><td>&#20998;&#23618;&#35268;&#21017;&#12289;&#21629;&#21517;&#12289;&#38169;&#35823;&#22788;&#29702;</td></tr>
+<tr><td>Next.js &#32534;&#30721;&#35268;&#33539;</td><td class="pa">docs/references/nextjs-conventions.md</td><td>&#21069;&#31471;&#35268;&#33539;</td></tr>
+<tr><td>&#26550;&#26500;&#27169;&#26495;</td><td class="pa">docs/templates/architecture.md</td><td>&#36755;&#20986;&#26684;&#24335;&#35268;&#33539;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26126;</th></tr></thead><tbody>
+<tr><td>&#25216;&#26415;&#26550;&#26500;&#25991;&#26723;</td><td class="pa">docs/design-docs/&lt;module&gt;.md</td><td><span class="bd b-md">Markdown</span></td><td>&#26550;&#26500;&#27010;&#36848;&#12289;&#25216;&#26415;&#36873;&#22411;&#12289;&#26680;&#24515;&#27969;&#31243;&#12289;Go &#20195;&#30721;&#39592;&#26550;&#12289;&#25968;&#25454;&#24211;&#36801;&#31227;&#12289;&#37197;&#32622;&#39033;&#12289;&#27979;&#35797;&#31574;&#30053;</td></tr>
+<tr><td>ADR&#65288;&#22914;&#26377;&#65289;</td><td class="pa">docs/design-docs/adr/adr-NNN-*.md</td><td><span class="bd b-md">Markdown</span></td><td>&#37325;&#22823;&#26550;&#26500;&#20915;&#31574;&#35760;&#24405;</td></tr>
+<tr><td>&#20219;&#21153;&#29366;&#24577;&#25991;&#20214;</td><td class="pa">.harness/tasks/arch-&lt;module&gt;.yaml</td><td><span class="bd b-yml">YAML</span></td><td>status: waiting_approval</td></tr>
+<tr><td>&#27169;&#22359;&#32034;&#24341;&#26356;&#26032;</td><td class="pa">docs/modules/_index.md</td><td><span class="bd b-md">Markdown</span></td><td>&#22635;&#20837;&#26550;&#26500;&#25991;&#26723;&#38142;&#25509;</td></tr>
+</tbody></table></div>
+<div class="ab"><h3>&#9208; &#20154;&#31867;&#23457;&#25209; #2&#65306;&#26550;&#26500;&#23457;&#25209;</h3><table><thead><tr><th>&#20154;&#31867;&#25805;&#20316;</th><th>&#27969;&#27745;&#32447;&#34892;&#20026;</th></tr></thead><tbody>
+<tr><td><b>&#30830;&#35748; / &#36890;&#36807;</b></td><td>&#26356;&#26032; approval_status &#8594; approved&#65292;&#32487;&#32493;&#36827;&#20837; UI &#35774;&#35745;</td></tr>
+<tr><td><b>&#25552;&#20986;&#20462;&#25913;&#24847;&#35265;</b></td><td>&#37325;&#26032;&#35843;&#29992; /architect &#20462;&#35746;&#26041;&#26696;&#65292;&#20877;&#27425;&#25552;&#20132;&#23457;&#25209;</td></tr>
+<tr><td><b>&#39539;&#22238;</b></td><td>&#26356;&#26032; status &#8594; failed&#65292;&#32456;&#27490;&#27969;&#27745;&#32447;</td></tr>
+</tbody></table></div>
+<div class="steps"><h3>&#25191;&#34892;&#27493;&#39588;</h3><ol class="sl">
+<li>&#39564;&#35777;&#21069;&#32622;&#26465;&#20214;&#65288;&#38656;&#27714; approval_status = approved&#65289;</li>
+<li>&#35835;&#21462;&#38656;&#27714;&#25991;&#26723;&#21644;&#20840;&#23616;&#26550;&#26500;&#25991;&#26723;</li>
+<li>&#35835;&#21462;&#32534;&#30721;&#35268;&#33539;&#65292;&#30830;&#20445;&#35774;&#35745;&#21512;&#35268;</li>
+<li>&#35774;&#35745; Go Domain &#20998;&#23618;&#32467;&#26500;&#65288;types &#8594; config &#8594; repository &#8594; service &#8594; handler &#8594; router&#65289;</li>
+<li>&#32454;&#21270;&#25968;&#25454;&#24211;&#27169;&#22411;&#65288;GORM &#26631;&#31614;&#12289;&#36801;&#31227;&#31574;&#30053;&#12289;&#32034;&#24341;&#35774;&#35745;&#65289;</li>
+<li>&#32454;&#21270; API &#23450;&#32422;&#65288;RESTful &#39118;&#26684;&#12289;DTO &#23450;&#20041;&#12289;&#32479;&#19968;&#21709;&#24212;&#26684;&#24335;&#65289;</li>
+<li>&#20135;&#20986;&#21487;&#30452;&#25509;&#22797;&#21046;&#32534;&#35793;&#30340; Go &#20195;&#30721;&#39592;&#26550;</li>
+<li>&#22522;&#20110;&#27169;&#26495;&#29983;&#25104;&#25216;&#26415;&#26041;&#26696;&#25991;&#26723;</li>
+<li class="pu">&#9208; &#26242;&#20572;&#65292;&#31561;&#24453;&#20154;&#31867;&#23457;&#25209;&#26550;&#26500;</li>
+</ol></div></div>''')
+
+# Part 5: Section 3 - Design UI
+parts.append('''
+<div class="sec" id="s3">
+<div class="sh"><div class="sn d">3</div><div class="st">UI &#35774;&#35745; <span class="cmd">/design-ui</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">UI/UX &#35774;&#35745;&#19987;&#23478;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag ty">&#10004; &#35774;&#35745;&#23457;&#25209;</span></div></div>
+<div class="ic"><div class="lb">&#21069;&#32622;&#20381;&#36182;</div><div class="vl">/architect &#26550;&#26500;&#24050;&#23457;&#25209;&#36890;&#36807;</div></div>
+<div class="ic"><div class="lb">Extension Skills</div><div class="vl"><span class="tag ts">frontend-design</span></div></div>
+</div>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26126;</th></tr></thead><tbody>
+<tr><td>&#38656;&#27714;&#25991;&#26723;</td><td class="pa">docs/requirements/&lt;module&gt;.md</td><td>&#21151;&#33021;&#38656;&#27714;&#12289;&#29992;&#25143;&#25925;&#20107;</td></tr>
+<tr><td>&#26550;&#26500;&#25991;&#26723;</td><td class="pa">docs/design-docs/&lt;module&gt;.md</td><td>API &#23450;&#32422;&#12289;&#25968;&#25454;&#27169;&#22411;</td></tr>
+<tr><td>&#20840;&#23616;&#26550;&#26500;</td><td class="pa">docs/design-docs/architecture.md</td><td;&#39033;&#30446;&#25972;&#20307;&#39118;&#26684;&#32422;&#26463;</td></tr>
+<tr><td>UI &#35268;&#33539;&#27169;&#26495;</td><td class="pa">docs/templates/ui-spec.md</td><td>&#35774;&#35745;&#35268;&#33539;&#36755;&#20986;&#26684;&#24335;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>HTML &#21407;&#22411;</td><td class="pa">docs/ui-prototypes/&lt;page&gt;.html</td><td><span class="bd b-ht">HTML</span></td><td>&#21487;&#22312;&#27983;&#35272;&#22120;&#30452;&#25509;&#25171;&#24320;&#65292;&#25903;&#25345;&#20132;&#20114;&#65288;Tailwind CDN&#65289;</td></tr>
+<tr><td>&#35774;&#35745;&#35268;&#33539;&#25991;&#26723;</td><td class="pa">docs/design-specs/&lt;page&gt;.md</td><td><span class="bd b-md">Markdown</span></td><td>&#39029;&#38754;&#24067;&#23616;&#12289;&#32452;&#20214;&#35268;&#33539;&#12289;&#37197;&#33394;&#26041;&#26696;&#12289;&#20132;&#20114;&#35268;&#33539;</td></tr>
+<tr><td>&#20219;&#21153;&#29366;&#24577;&#26356;&#26032;</td><td class="pa">.harness/tasks/&lt;task-id&gt;.yaml</td><td><span class="bd b-yml">YAML</span></td><td>status: waiting_approval</td></tr>
+<tr><td>&#27169;&#22359;&#32034;&#24341;&#26356;&#26032;</td><td class="pa">docs/modules/_index.md</td><td><span class="bd b-md">Markdown</span></td><td>&#22635;&#20837; UI &#21407;&#22411;&#38142;&#25509;</td></tr>
+</tbody></table></div>
+<div class="ab"><h3>&#9208; &#20154;&#31867;&#23457;&#25209; #3&#65306;&#35774;&#35745;&#23457;&#25209;</h3><table><thead><tr><th>&#20154;&#31867;&#25805;&#20316;</th><th>&#27969;&#27745;&#32447;&#34892;&#20026;</th></tr></thead><tbody>
+<tr><td><b>&#30830;&#35748; / &#36890;&#36807;</b></td><td>&#26356;&#26032; approval_status &#8594; approved&#65292;&#36827;&#20837;&#32534;&#30721;&#38454;&#27573;</td></tr>
+<tr><td><b>&#25552;&#20986;&#20462;&#25913;&#24847;&#35265;</b></td><td>&#37325;&#26032;&#35843;&#29992; /design-ui &#20462;&#35746;&#21407;&#22411;&#65292;&#20877;&#27425;&#25552;&#20132;&#23457;&#25209;</td></tr>
+<tr><td><b>&#39539;&#22238;</b></td><td>&#26356;&#26032; status &#8594; failed&#65292;&#32456;&#27490;&#27969;&#27745;&#32447;</td></tr>
+</tbody></table></div>
+<div class="steps"><h3>&#25191;&#34892;&#27493;&#39588;</h3><ol class="sl">
+<li>&#35835;&#21462;&#38656;&#27714;&#25991;&#26723; + &#26550;&#26500;&#25991;&#26723;&#65288;&#32570;&#22833;&#21017;&#26242;&#20572;&#24182;&#25253;&#38169;&#65289;</li>
+<li>&#20998;&#26512;&#39029;&#38754;&#32467;&#26500;&#21644;&#20132;&#20114;&#27969;&#31243;</li>
+<li>&#35774;&#35745;&#37197;&#33394;&#26041;&#26696;&#21644;&#32452;&#20214;&#26679;&#24335;</li>
+<li>&#29983;&#25104;&#21487;&#39044;&#35272; HTML &#21407;&#22411;&#65288;&#31227;&#21160;&#20248;&#20808;&#12289;&#21487;&#20132;&#20114;&#12289;&#36148;&#36817;&#30495;&#23454;&#25968;&#25454;&#65289;</li>
+<li>&#22522;&#20110;&#27169;&#26495;&#29983;&#25104;&#35774;&#35745;&#35268;&#33539;&#25991;&#26723;</li>
+<li class="pu">&#9208; &#26242;&#20572;&#65292;&#23637;&#31034;&#21407;&#22411;&#39044;&#35272;&#65292;&#31561;&#24453;&#20154;&#31867;&#30830;&#35748;&#35774;&#35745;</li>
+</ol></div></div>''')
+
+# Part 6: Section 4 - Code (Go + Frontend)
+parts.append('''
+<div class="sec" id="s4">
+<div class="sh"><div class="sn c">4</div><div class="st">&#32534;&#30721;&#65288;&#24182;&#34892;&#65289;<span class="cmd">/code-go</span> + <span class="cmd">/code-frontend</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">Go &#21518;&#31471;&#32534;&#30721;&#19987;&#23478; + React Next.js &#21069;&#31471;&#32534;&#30721;&#19987;&#23478;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag tn">&#19981;&#38656;&#35201;</span></div></div>
+<div class="ic"><div class="lb">&#24182;&#34892;&#25191;&#34892;</div><div class="vl">&#10004; &#20004;&#20010; Skill &#21508;&#33258;&#29420;&#31435;&#20316;&#29992;&#22495;&#24037;&#20316;</div></div>
+<div class="ic"><div class="lb">Extension Skills</div><div class="vl"><span class="tag ts">autonomous-coding-harness</span><span class="tag ts">modular-vibe-coding</span><span class="tag ts">tdd-workflow</span><span class="tag ts">verification-loop</span><span class="tag ts">nextjs-patterns</span></div></div>
+</div>
+
+<h3 class="su" style="color:var(--accent)">&#128296; /code-go &#8212; Go &#21518;&#31471;&#32534;&#30721;</h3>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#26550;&#26500;&#25991;&#26723;</td><td>.harness/tasks/ &#20013;&#30340; output_path</td><td>&#27169;&#22359;&#20998;&#23618;&#35774;&#35745;&#12289;&#20195;&#30721;&#39592;&#26550;</td></tr>
+<tr><td>&#20840;&#23616;&#26550;&#26500;</td><td class="pa">docs/design-docs/architecture.md</td><td>&#31995;&#32479;&#25972;&#20307;&#32467;&#26500;</td></tr>
+<tr><td>Go &#32534;&#30721;&#35268;&#33539;</td><td class="pa">docs/references/go-conventions.md</td><td>&#20998;&#23618;&#35268;&#21017;&#12289;&#21629;&#21517;&#12289;&#27979;&#35797;&#32422;&#23450;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>Domain &#20998;&#23618;&#20195;&#30721;</td><td class="pa">internal/domain/&lt;module&gt;/</td><td><span class="bd b-go">Go</span></td><td>types &#8594; config &#8594; repository &#8594; service &#8594; handler &#8594; router</td></tr>
+<tr><td>&#21333;&#20803;&#27979;&#35797;</td><td class="pa">internal/domain/&lt;module&gt;/**/*_test.go</td><td><span class="bd b-go">Go</span></td><td>&#34920;&#39550;&#21160;&#27979;&#35797;&#65288;gomock/testify mock&#65289;</td></tr>
+</tbody></table></div>
+<div class="steps"><h3>&#23454;&#29616;&#39034;&#24207;</h3><ol class="sl">
+<li>types&#65288;&#25968;&#25454;&#32467;&#26500;&#23450;&#20041;&#65292;&#38646;&#22806;&#37096;&#20381;&#36182;&#65289;</li>
+<li>config&#65288;&#37197;&#32622;&#32467;&#26500;&#20307;&#19982;&#21152;&#36733;&#36923;&#36753;&#65289;</li>
+<li>repository&#65288;&#25509;&#21475;&#23450;&#20041; + &#23454;&#29616;&#65292;&#25968;&#25454;&#24211;&#25805;&#20316;&#65289;</li>
+<li>service&#65288;&#19994;&#21153;&#36923;&#36753;&#65292;&#21487;&#21333;&#20803;&#27979;&#35797;&#65289;</li>
+<li>handler&#65288;HTTP &#36890;&#37197;&#23618;&#65292;&#35831;&#27714;/&#21709;&#24212;&#26144;&#23556;&#65289;</li>
+<li>router&#65288;&#36335;&#30001;&#27880;&#20876;&#65292;&#20013;&#38388;&#20214;&#25346;&#36733;&#65289;</li>
+<li>&#27599;&#23618;&#32534;&#35793;&#36890;&#36807;&#21518;&#20877;&#36827;&#19979;&#19968;&#23618;</li>
+</ol></div>
+
+<h3 class="su" style="color:var(--accent2)">&#127912; /code-frontend &#8212; React Next.js &#21069;&#31471;&#32534;&#30721;</h3>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#26550;&#26500;&#25991;&#26723;</td><td>/architect &#20135;&#20986;</td><td>API &#23450;&#32422;&#12289;&#21069;&#31471;&#36335;&#30001;&#35268;&#21010;</td></tr>
+<tr><td>UI &#35774;&#35745;&#35268;&#33539;</td><td>/design-ui &#20135;&#20986;</td><td>&#32452;&#20214;&#35774;&#35745;&#12289;&#20132;&#20114;&#35268;&#33539;</td></tr>
+<tr><td>HTML &#21407;&#22411;</td><td class="pa">docs/ui-prototypes/</td><td>&#24067;&#23616;&#21644;&#20132;&#20114;&#21442;&#32771;</td></tr>
+<tr><td>Next.js &#32534;&#30721;&#35268;&#33539;</td><td class="pa">docs/references/nextjs-conventions.md</td><td>&#32452;&#20214;&#27169;&#24335;&#12289;&#29366;&#24577;&#31649;&#29702;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>TypeScript &#31867;&#22411;</td><td class="pa">src/types/&lt;module&gt;.ts</td><td><span class="bd b-ts">TS</span></td><td>&#19982;&#21518;&#31471; API &#23450;&#32422;&#21516;&#27493;</td></tr>
+<tr><td>API &#35843;&#29992;&#23618;</td><td class="pa">src/lib/api/&lt;module&gt;.ts</td><td><span class="bd b-ts">TS</span></td><td>&#32479;&#19968; HTTP &#35831;&#27714;&#23553;&#35013;</td></tr>
+<tr><td>TanStack Query Hooks</td><td class="pa">src/hooks/use-&lt;module&gt;.ts</td><td><span class="bd b-ts">TS</span></td><td>&#25968;&#25454;&#33719;&#21462;/&#32531;&#23384;</td></tr>
+<tr><td>&#19994;&#21153;&#32452;&#20214;</td><td class="pa">src/components/&lt;module&gt;/</td><td><span class="bd b-ts">TSX</span></td><td;&#40664;&#35748; Server Component</td></tr>
+<tr><td>&#39029;&#38754;</td><td class="pa">src/app/&lt;module&gt;/page.tsx</td><td><span class="bd b-ts">TSX</span></td><td>App Router &#39029;&#38754;</td></tr>
+</tbody></table></div>
+<div class="steps"><h3>&#23454;&#29616;&#39034;&#24207;</h3><ol class="sl">
+<li>types&#65288;TypeScript &#31867;&#22411;&#23450;&#20041;&#65289;</li>
+<li>api&#65288;API &#35843;&#29992;&#23618;&#23553;&#35013;&#65289;</li>
+<li>hooks&#65288;TanStack Query &#25968;&#25454;&#33719;&#21462; Hooks&#65289;</li>
+<li>components&#65288;UI &#32452;&#20214;&#23454;&#29616;&#65289;</li>
+<li>pages&#65288;&#39029;&#38754;&#36335;&#30001;&#32452;&#35013;&#65289;</li>
+</ol></div></div>''')
+
+# Part 7: Section 5 - Test
+parts.append('''
+<div class="sec" id="s5">
+<div class="sh"><div class="sn t">5</div><div class="st">&#27979;&#35797; <span class="cmd">/test</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">&#27979;&#35797;&#24037;&#31243;&#24072;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag tn">&#19981;&#38656;&#35201;</span></div></div>
+<div class="ic"><div class="lb">&#21069;&#32622;&#20381;&#36182;</div><div class="vl">/code-go + /code-frontend &#22343;&#23436;&#25104;</div></div>
+<div class="ic"><div class="lb">Extension Skills</div><div class="vl"><span class="tag ts">tdd-workflow</span><span class="tag ts">verification-loop</span></div></div>
+</div>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#26550;&#26500;&#25991;&#26723;</td><td class="pa">docs/design-docs/architecture.md</td><td>&#20998;&#23618;&#26550;&#26500;&#21644; API &#23450;&#32422;</td></tr>
+<tr><td>Go &#32534;&#30721;&#35268;&#33539;</td><td class="pa">docs/references/go-conventions.md</td><td>Go &#27979;&#35797;&#32422;&#23450;</td></tr>
+<tr><td>Next.js &#32534;&#30721;&#35268;&#33539;</td><td class="pa">docs/references/nextjs-conventions.md</td><td>&#21069;&#31471;&#27979;&#35797;&#32422;&#23450;</td></tr>
+<tr><td;&#26032;&#22686;/&#20462;&#25913;&#20195;&#30721;</td><td>git diff / &#20219;&#21153;&#25991;&#20214;</td><td>&#30830;&#23450;&#27979;&#35797;&#33539;&#22260;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>Go &#21333;&#20803;&#27979;&#35797;</td><td class="pa">internal/**/*_test.go</td><td><span class="bd b-go">Go</span></td><td>&#34920;&#39550;&#21160;&#27979;&#35797; + mock</td></tr>
+<tr><td>&#21069;&#31471;&#27979;&#35797;</td><td class="pa">src/**/__tests__/*.test.ts(x)</td><td><span class="bd b-ts">TSX</span></td><td>Testing Library + MSW</td></tr>
+<tr><td>&#35206;&#30422;&#29575;&#25253;&#21578;</td><td class="pa">.harness/reports/coverage/</td><td><span class="bd b-ht">HTML</span></td><td;&#25353;&#27169;&#22359;&#32479;&#35745;</td></tr>
+<tr><td>&#27979;&#35797;&#25253;&#21578;</td><td class="pa">.harness/reports/test-report.md</td><td><span class="bd b-md">Markdown</span></td><td>&#36890;&#36807;/&#22833;&#36133;/&#36339;&#36807;&#32479;&#35745;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128202; &#35206;&#30422;&#29575;&#30446;&#26631;</h3><table><thead><tr><th>&#23618;&#32423;</th><th>&#26368;&#20302;&#35206;&#30422;&#29575;</th></tr></thead><tbody>
+<tr><td>Service &#23618; / &#20851;&#38190;&#32452;&#20214;</td><td>&#8805; 80%</td></tr>
+<tr><td>Handler &#23618; / API &#36335;&#30001;</td><td>&#8805; 70%</td></tr>
+<tr><td>Repository &#23618;</td><td>&#8805; 60%</td></tr>
+</tbody></table></div>
+<div class="steps"><h3>&#25191;&#34892;&#27493;&#39588;</h3><ol class="sl">
+<li>&#35782;&#21035;&#26412;&#27425;&#21464;&#26356;&#28041;&#21450;&#30340;&#27169;&#22359;&#21644;&#25991;&#20214;</li>
+<li>&#20026;&#27599;&#20010;&#27169;&#22359;&#29983;&#25104;&#34920;&#39550;&#21160;&#21333;&#20803;&#27979;&#35797;</li>
+<li>&#25191;&#34892;&#27979;&#35797;&#24182;&#25910;&#38598;&#35206;&#30422;&#29575;</li>
+<li>&#22833;&#36133;&#20462;&#22797;&#65306;&#26368;&#22810;&#33258;&#21160;&#37325;&#35797; 3 &#27425;</li>
+<li>&#36229;&#36807;&#37325;&#35797;&#27425;&#25968;&#21017;&#26631;&#35760;&#38656;&#35201;&#20154;&#24037;&#24178;&#39044;&#24182;&#25253;&#21578;</li>
+<li>&#29983;&#25104;&#35206;&#30422;&#29575;&#25253;&#21578;&#21644;&#27979;&#35797;&#25253;&#21578;</li>
+</ol></div></div>''')
+
+# Part 8: Section 6 - Review
+parts.append('''
+<div class="sec" id="s6">
+<div class="sh"><div class="sn r">6</div><div class="st">&#20195;&#30721;&#23457;&#26597; <span class="cmd">/review</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">&#39640;&#32423;&#24037;&#31243;&#24072;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag tn">&#19981;&#38656;&#35201;</span>&#65288;&#20294;&#32467;&#35770;&#21487;&#33021;&#35302;&#21457;&#22238;&#36864;&#65289;</div></div>
+<div class="ic"><div class="lb">&#21069;&#32622;&#20381;&#36182;</div><div class="vl">/test &#27979;&#35797;&#36890;&#36807;&#21518;</div></div>
+<div class="ic"><div class="lb">Extension Skills</div><div class="vl"><span class="tag ts">verification-loop</span></div></div>
+</div>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#20195;&#30721;&#21464;&#26356;</td><td>git diff / PR diff</td><td>&#26412;&#27425;&#25152;&#26377;&#20195;&#30721;&#21464;&#26356;</td></tr>
+<tr><td>&#20219;&#21153;&#29366;&#24577;&#25991;&#20214;</td><td class="pa">.harness/tasks/&lt;task-id&gt;.yaml</td><td>&#21464;&#26356;&#19978;&#19979;&#25991;</td></tr>
+<tr><td>&#38656;&#27714;&#25991;&#26723; + &#26550;&#26500;&#25991;&#26723;</td><td class="pa">docs/</td><td>&#35774;&#35745;&#24847;&#22270;&#21442;&#32771;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#23457;&#26597;&#25253;&#21578;</td><td class="pa">.harness/reports/review-report.md</td><td><span class="bd b-md">Markdown</span></td><td>&#32467;&#26500;&#21270;&#23457;&#26597;&#32467;&#26524;</td></tr>
+<tr><td>&#20219;&#21153;&#29366;&#24577;&#26356;&#26032;</td><td class="pa">.harness/tasks/&lt;task-id&gt;.yaml</td><td><span class="bd b-yml">YAML</span></td><td>&#26356;&#26032;&#23457;&#26597;&#32467;&#35770;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128269; &#23457;&#26597; 5 &#22823;&#32500;&#24230;</h3><table><thead><tr><th>&#32500;&#24230;</th><th>&#26816;&#26597;&#20869;&#23481;</th><th>&#20005;&#37325;&#31243;&#24230;</th></tr></thead><tbody>
+<tr><td>&#128311; &#26550;&#26500;&#21512;&#35268;</td><td>&#20998;&#23618;&#20381;&#36182;&#26041;&#21521;&#12289;&#27169;&#22359;&#36793;&#30028;</td><td>&#128308; &#20005;&#37325;</td></tr>
+<tr><td>&#128311; &#20195;&#30721;&#36136;&#37327;</td><td>&#21629;&#21517;&#12289;&#22797;&#26434;&#24230;&#12289;DRY</td><td>&#128993; &#37325;&#35201;</td></tr>
+<tr><td>&#128311; &#38169;&#35823;&#22788;&#29702;</td><td>Go &#19981;&#21534;&#38169;&#12289;&#21069;&#31471;&#26377;&#20859;&#24213;</td><td>&#128308; &#20005;&#37325;</td></tr>
+<tr><td>&#128311; &#23433;&#20840;&#24615;</td><td>SQL &#27880;&#20837;&#12289;XSS&#12289;&#35748;&#35777;</td><td>&#128308; &#20005;&#37325;</td></tr>
+<tr><td>&#128311; &#24615;&#33021;</td><td>N+1 &#26597;&#35810;&#12289;&#22823;&#20107;&#21153;&#12289;&#37325;&#28436;&#26579;</td><td>&#128993; &#37325;&#35201;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#9878; &#23457;&#26597;&#32467;&#35710;&#21028;&#23450;</h3><table><thead><tr><th>&#32467;&#35710;</th><th>&#26465;&#20214;</th><th>&#21518;&#32493;&#21160;&#20316;</th></tr></thead><tbody>
+<tr><td>&#10004; &#36890;&#36807;</td><td>&#26080;&#20005;&#37325;&#38382;&#39064;&#65292;&#37325;&#35201;&#38382;&#39064; &#8804; 2 &#20010;</td><td>&#32487;&#32493;&#21019;&#24314; PR</td></tr>
+<tr><td>&#9888; &#38656;&#35201;&#20462;&#25913;</td><td>1 &#20010;&#20005;&#37325; &#25110; 3+ &#20010;&#37325;&#35201;</td><td;&#36864;&#22238;&#32534;&#30721; Agent &#20462;&#22797;</td></tr>
+<tr><td>&#10060; &#25298;&#32477;</td><td>&#26550;&#26500;&#36829;&#35268; / &#23433;&#20840;&#38382;&#39064;</td><td>&#36864;&#22238;&#32534;&#30721; Agent&#65292;&#21487;&#33021;&#38656;&#35201;&#37325;&#26032;&#35774;&#35745;</td></tr>
+</tbody></table></div></div>''')
+
+# Part 9: Section 7 - PR + Section 8 - Entropy
+parts.append('''
+<div class="sec" id="s7">
+<div class="sh"><div class="sn p">7</div><div class="st">&#21019;&#24314; PR</div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#25191;&#34892;&#32773;</div><div class="vl">Pipeline &#32534;&#25490;&#24341;&#25806;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag tn">&#19981;&#38656;&#35201;</span>&#65288;PR &#21019;&#24314;&#21518;&#30001;&#20154;&#24037;&#22312; GitHub &#19978;&#23457;&#26597;&#65289;</div></div>
+<div class="ic"><div class="lb">&#20998;&#25903;&#31574;&#30053;</div><div class="vl">feature/* &#8594; develop &#8594; main</div></div>
+</div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>Pull Request</td><td>GitHub PR URL</td><td>feature &#20998;&#25903; &#8594; develop &#20998;&#25903;</td></tr>
+<tr><td>&#20219;&#21153;&#29366;&#24577;&#26356;&#26032;</td><td class="pa">.harness/tasks/&lt;task-id&gt;.yaml</td><td>status: completed</td></tr>
+<tr><td>&#27169;&#22359;&#32034;&#24341;&#26356;&#26032;</td><td class="pa">docs/modules/_index.md</td><td>&#29366;&#24577; &#8594; &#24050;&#20132;&#20184;</td></tr>
+<tr><td>&#25191;&#34892;&#26085;&#24535;</td><td class="pa">.harness/logs/&lt;task-id&gt;.md</td><td>&#23436;&#25972;&#25191;&#34892;&#35760;&#24405;</td></tr>
+</tbody></table></div>
+<p style="color:var(--muted);font-size:.9rem">PR &#25551;&#36848;&#21253;&#21547;&#65306;&#21151;&#33021;&#27010;&#36848;&#12289;&#21464;&#26356;&#21015;&#34920;&#65288;&#20851;&#32852;&#25152;&#26377;&#25991;&#26723;&#65289;&#12289;&#27979;&#35797;&#35206;&#30422;&#29575;&#12289;&#23457;&#26597;&#32467;&#26524;&#12289;Checklist&#12290;</p></div>
+
+<div class="sec" id="s8">
+<div class="sh"><div class="sn m">8</div><div class="st">&#29190;&#20540;&#25195;&#25551; <span class="cmd">/entropy</span><span style="font-size:.85rem;color:var(--muted);margin-left:8px">&#25345;&#32493;&#30417;&#25511; &#183; &#29420;&#31435;&#36816;&#34892;</span></div></div>
+<div class="ig">
+<div class="ic"><div class="lb">&#35282;&#33394;</div><div class="vl">&#20195;&#30721;&#20581;&#24247;&#30417;&#25511; Agent&#65288;&#20153;&#26816;&#21307;&#29983;&#65289;</div></div>
+<div class="ic"><div class="lb">&#20154;&#31867;&#23457;&#25209;</div><div class="vl"><span class="tag tn">&#19981;&#38656;&#35201;</span></div></div>
+<div class="ic"><div class="lb">&#35302;&#21457;&#26041;&#24335;</div><div class="vl">&#27599;&#21608; CI &#23450;&#26102; / &#25163;&#21160;&#35302;&#21457; / &#27969;&#27745;&#32447;&#21551;&#21160;&#26102;&#36729;&#37327;&#24555;&#26816;</div></div>
+<div class="ic"><div class="lb">&#21069;&#32622;&#20381;&#36182;</div><div class="vl">&#26080;&#65288;&#29420;&#31435;&#36816;&#34892;&#65289;</div></div>
+</div>
+<div class="tb"><h3>&#128229; &#36755;&#20837;</h3><table><thead><tr><th>&#36755;&#20837;</th><th>&#26469;&#28304;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#20840;&#20195;&#30721;&#24211;</td><td class="pa">internal/ + src/</td><td>&#25195;&#25551;&#33539;&#22260;</td></tr>
+<tr><td>&#26550;&#26500;&#25991;&#26723;</td><td class="pa">docs/design-docs/architecture.md</td><td>API/&#27169;&#22411;/&#36335;&#30001;&#23545;&#40784;&#26816;&#26597;</td></tr>
+<tr><td>&#21382;&#21490;&#22522;&#32447;</td><td class="pa">.harness/entropy/baseline.json</td><td>&#19978;&#27425;&#25195;&#25551;&#25968;&#25454;&#65288;&#36235;&#21183;&#23545;&#27604;&#65289;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128228; &#36755;&#20986;</h3><table><thead><tr><th>&#36755;&#20986;</th><th>&#36335;&#24452;</th><th>&#26684;&#24335;</th><th>&#35828;&#26107;</th></tr></thead><tbody>
+<tr><td>&#29190;&#20540;&#25253;&#21578;</td><td class="pa">docs/entropy-report.md</td><td><span class="bd b-md">Markdown</span></td><td>&#26550;&#26500;&#20559;&#24046; + &#20195;&#30721;&#24322;&#21619; + &#25991;&#26723;&#19981;&#19968;&#33268; + &#37325;&#26500;&#24314;&#35758;</td></tr>
+<tr><td>&#21382;&#21490;&#25968;&#25454;</td><td class="pa">.harness/entropy/baseline.json</td><td><span class="bd b-yml">JSON</span></td><td>&#26412;&#27425;&#25195;&#25551;&#25968;&#25454;&#65292;&#20379;&#19979;&#27425;&#23545;&#27604;</td></tr>
+</tbody></table></div>
+<div class="tb"><h3>&#128300; &#25195;&#25551; 6 &#22823;&#32500;&#24230;</h3><table><thead><tr><th>&#32500;&#24230;</th><th>&#26816;&#27979;&#20869;&#23481;</th><th>&#24037;&#20855;</th></tr></thead><tbody>
+<tr><td>&#36328;&#23618;&#24341;&#29992;</td><td>handler &#24341;&#29992; repository &#31561;</td><td>grep / go list</td></tr>
+<tr><td>&#24490;&#29615;&#20381;&#36182;</td><td;&#21253;&#38388;&#24490;&#29615; import</td><td>go build / madge</td></tr>
+<tr><td>&#20195;&#30721;&#24322;&#21619;</td><td>&#36807;&#38271;&#20989;&#25968;&#12289;God Object&#12289;&#37325;&#22797;&#20195;&#30721;</td><td>gocyclo / ESLint</td></tr>
+<tr><td>&#25991;&#26723;&#19968;&#33268;&#24615;</td><td>API/&#27169;&#22411;/&#36335;&#30001;&#19982;&#25991;&#26723;&#26159;&#21542;&#23545;&#40784;</td><td>&#20154;&#24037;&#23545;&#27604;</td></tr>
+<tr><td>&#25216;&#26415;&#20538;&#21153;</td><td>TODO / FIXME / HACK &#26631;&#35760;</td><td>grep</td></tr>
+<tr><td>&#20381;&#36182;&#20581;&#24247;</td><td>&#36807;&#26399;&#29256;&#26412;&#12289;&#23433;&#20840;&#28431;&#27934;</td><td>govulncheck / npm audit</td></tr>
+</tbody></table></div></div>''')
+
+# Part 10: Extension Skills + Trace
+parts.append('''
+<div class="sec" id="se">
+<div class="sh"><div class="sn c">+</div><div class="st">Extension Skills &#20351;&#29992;&#27719;&#24635;</div></div>
+<div class="eg">
+<div class="ec"><div class="en">autonomous-coding-harness</div>
+<div style="margin-bottom:8px"><span class="tag ts">/analyze</span><span class="tag ts">/code-go</span><span class="tag ts">/code-frontend</span></div>
+<div class="ed">&#20219;&#21153;&#20998;&#35299;&#19982;&#35268;&#21010;&#12289;&#19978;&#19979;&#25991;&#31649;&#29702;&#12289;&#38169;&#35823;&#24674;&#22797;&#12289;&#36827;&#24230;&#36861;&#36341;</div></div>
+<div class="ec"><div class="en">modular-vibe-coding</div>
+<div style="margin-bottom:8px"><span class="tag ts">/analyze</span><span class="tag ts">/architect</span><span class="tag ts">/code-go</span><span class="tag ts">/code-frontend</span></div>
+<div class="ed">&#21333;&#19968;&#36131;&#20219;&#25286;&#20998;&#12289;&#25509;&#21475;&#38548;&#31163;&#12289;&#20381;&#36182;&#27880;&#20837;&#12289;&#27169;&#22359;&#32452;&#21512;</div></div>
+<div class="ec"><div class="en">tdd-workflow</div>
+<div style="margin-bottom:8px"><span class="tag ts">/code-go</span><span class="tag ts">/code-frontend</span><span class="tag ts">/test</span></div>
+<div class="ed">&#32418;-&#32511;-&#37325;&#26500;&#24490;&#29615;&#12289;&#27979;&#35797;&#20808;&#34892;&#12289;&#35206;&#30422;&#29575;&#20445;&#38556;</div></div>
+<div class="ec"><div class="en">verification-loop</div>
+<div style="margin-bottom:8px"><span class="tag ts">/code-go</span><span class="tag ts">/code-frontend</span><span class="tag ts">/test</span><span class="tag ts">/review</span></div>
+<div class="ed">&#32534;&#35793;&#26816;&#26597; &#8594; &#27979;&#35797;&#39564;&#35777; &#8594; Lint &#8594; &#26550;&#26500;&#21512;&#35268;&#65288;&#33258;&#21160;&#36136;&#37327;&#38376;&#31105;&#65289;</div></div>
+<div class="ec"><div class="en">frontend-design</div>
+<div style="margin-bottom:8px"><span class="tag ts">/design-ui</span><span class="tag ts">/code-frontend</span></div>
+<div class="ed">&#37197;&#33394;/&#25490;&#29256;/&#32452;&#20214;/&#38388;&#36353;&#35774;&#35745;&#31995;&#32479;&#12289;&#19968;&#33268;&#24615;&#35268;&#33539;</div></div>
+<div class="ec"><div class="en">nextjs-patterns</div>
+<div style="margin-bottom:8px"><span class="tag ts">/code-frontend</span></div>
+<div class="ed">App Router &#26368;&#20339;&#23454;&#36341;&#12289;&#25968;&#25454;&#33719;&#21462;&#27169;&#24335;&#12289;&#29366;&#24577;&#31649;&#29702;&#12289;&#24615;&#33021;&#20248;&#21270;</div></div>
+</div></div>
+
+<div class="sec" id="st">
+<div class="sh"><div class="sn p">&#128279;</div><div class="st">&#20135;&#20986;&#29289;&#20840;&#38142;&#36335;&#36861;&#36341;&#65288;&#20197;&#20102;&#20110;&#27880;&#20876;&#20026;&#20363;&#65289;</div></div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem;background:var(--surface2);font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+<div style="padding:10px 16px">&#38454;&#27573;</div><div style="padding:10px 16px">&#20135;&#20986;&#29289;</div><div style="padding:10px 16px">&#36335;&#24452;</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:var(--accent);font-weight:500">&#38656;&#27714;&#20998;&#26512;</div><div style="padding:10px 16px">&#38656;&#27714;&#25991;&#26723;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">docs/requirements/user-registration.md</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px"></div><div style="padding:10px 16px">&#20219;&#21153;&#29366;&#24577;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">.harness/tasks/req-user-registration.yaml</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1tr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:var(--accent);font-weight:500">&#26550;&#26500;&#35774;&#35745;</div><div style="padding:10px 16px">&#25216;&#26415;&#26550;&#26500;&#25991;&#26723;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">docs/design-docs/user-registration.md</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px"></div><div style="padding:10px 16px">ADR</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">docs/design-docs/adr/adr-001-*.md</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:var(--accent);font-weight:500">UI &#35774;&#35745;</div><div style="padding:10px 16px">HTML &#21407;&#22411;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">docs/ui-prototypes/user-registration.html</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px"></div><div style="padding:10px 16px">&#35774;&#35745;&#35268;&#33539;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">docs/design-specs/user-registration.md</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:var(--accent2);font-weight:500">Go &#32534;&#30721;</div><div style="padding:10px 16px">Domain &#20998;&#23618;&#20195;&#30721;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">internal/domain/user/</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px"></div><div style="padding:10px 16px">&#21333;&#20803;&#27979;&#35797;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">internal/domain/user/**/*_test.go</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:var(--accent2);font-weight:500">&#21069;&#31471;&#32534;&#30721;</div><div style="padding:10px 16px">&#31867;&#22411;+API+Hooks</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">src/types/ + src/lib/api/ + src/hooks/</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px"></div><div style="padding:10px 16px">&#32452;&#20214;+&#39029;&#38754;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">src/components/user/ + src/app/register/</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:var(--green);font-weight:500">&#27979;&#35797;</div><div style="padding:10px 16px">&#35206;&#30422;&#29575;&#25253;&#21578;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">.harness/reports/coverage/</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px"></div><div style="padding:10px 16px">&#27979;&#35797;&#25253;&#21578;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">.harness/reports/test-report.md</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;border-bottom:1px solid rgba(42,53,84,.5);font-size:.85rem"><div style="padding:10px 16px;color:#818cf8;font-weight:500">&#23457;&#26597;</div><div style="padding:10px 16px">&#23457;&#26597;&#25253;&#21578;</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">.harness/reports/review-report.md</div></div>
+<div style="display:grid;grid-template-columns:100px 280px 1fr;font-size:.85rem"><div style="padding:10px 16px;color:var(--accent);font-weight:500">&#20132;&#20184;</div><div style="padding:10px 16px">Pull Request</div><div style="padding:10px 16px;font-family:monospace;color:var(--green);font-size:.8rem">GitHub PR (feature/* &#8594; develop)</div></div>
+</div></div>
+
+</div></body></html>''')
+
+# Write all parts
+html = ''.join(parts)
+output_dir = os.path.dirname(os.path.abspath(__file__))
+output_path = os.path.join(output_dir, 'pipeline-flow-doc.html')
+with open(output_path, 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print(f'Done! File size: {len(html)} bytes')

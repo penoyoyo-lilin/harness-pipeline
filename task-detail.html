@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务详情 — Harness Pipeline</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0A0E17;
+  --bg-card: rgba(15, 20, 35, 0.75);
+  --bg-glass: rgba(15, 20, 35, 0.55);
+  --neon-cyan: #00F0FF;
+  --neon-purple: #7B61FF;
+  --neon-green: #00FF88;
+  --neon-red: #FF3E6C;
+  --neon-yellow: #FFD600;
+  --neon-orange: #FF8A00;
+  --text-primary: #E8ECF4;
+  --text-secondary: #7A8BA8;
+  --text-dim: #3D4F6F;
+  --border-subtle: rgba(0, 240, 255, 0.08);
+  --border-active: rgba(0, 240, 255, 0.25);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'JetBrains Mono', 'PingFang SC', 'Microsoft YaHei', monospace;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.neon-text-cyan { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+.neon-text-green { color: var(--neon-green); text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+.neon-text-purple { color: var(--neon-purple); text-shadow: 0 0 10px rgba(123, 97, 255, 0.5); }
+.neon-text-red { color: var(--neon-red); text-shadow: 0 0 10px rgba(255, 62, 108, 0.5); }
+.neon-text-yellow { color: var(--neon-yellow); text-shadow: 0 0 10px rgba(255, 214, 0, 0.5); }
+
+/* 状态徽章 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-pending { background: rgba(61, 79, 111, 0.3); color: var(--text-dim); border: 1px solid rgba(61, 79, 111, 0.4); }
+.badge-running { background: rgba(0, 240, 255, 0.1); color: var(--neon-cyan); border: 1px solid rgba(0, 240, 255, 0.3); }
+.badge-waiting { background: rgba(255, 214, 0, 0.1); color: var(--neon-yellow); border: 1px solid rgba(255, 214, 0, 0.3); }
+.badge-completed { background: rgba(0, 255, 136, 0.1); color: var(--neon-green); border: 1px solid rgba(0, 255, 136, 0.3); }
+.badge-failed { background: rgba(255, 62, 108, 0.1); color: var(--neon-red); border: 1px solid rgba(255, 62, 108, 0.3); }
+
+/* 时间线 */
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--neon-cyan), var(--neon-purple));
+  opacity: 0.3;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+  border: 2px solid var(--neon-cyan);
+}
+
+.timeline-item.completed::before { border-color: var(--neon-green); background: var(--neon-green); }
+.timeline-item.failed::before { border-color: var(--neon-red); background: var(--neon-red); }
+.timeline-item.running::before { 
+  border-color: var(--neon-cyan); 
+  background: var(--neon-cyan);
+  box-shadow: 0 0 8px var(--neon-cyan);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 代码块 */
+.code-block {
+  background: rgba(10, 14, 23, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.code-block .comment { color: var(--text-dim); }
+.code-block .keyword { color: var(--neon-purple); }
+.code-block .string { color: var(--neon-green); }
+.code-block .function { color: var(--neon-cyan); }
+
+/* 文件树 */
+.file-tree {
+  font-size: 12px;
+  line-height: 2;
+}
+
+.file-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.file-tree-item:hover {
+  background: rgba(0, 240, 255, 0.05);
+}
+
+.file-tree-item.active {
+  background: rgba(0, 240, 255, 0.1);
+  border-left: 2px solid var(--neon-cyan);
+}
+
+.file-tree-item.added { color: var(--neon-green); }
+.file-tree-item.modified { color: var(--neon-yellow); }
+.file-tree-item.deleted { color: var(--neon-red); }
+
+/* Tab */
+.tab-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active {
+  color: var(--neon-cyan);
+  border-bottom-color: var(--neon-cyan);
+}
+
+/* 按钮 */
+.btn-primary {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(0, 240, 255, 0.15);
+  color: var(--neon-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+}
+
+.btn-success {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--neon-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  background: rgba(0, 255, 136, 0.25);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.3); }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="glass sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-4">
+    <a href="dashboard.html" class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span style="color:var(--text-secondary);font-size:12px;">返回仪表盘</span>
+    </a>
+    <div style="width:1px;height:20px;background:var(--border-subtle);"></div>
+    <span class="neon-text-cyan text-sm font-bold tracking-wider">TASK DETAIL</span>
+  </div>
+  
+  <div class="flex items-center gap-3">
+    <span class="badge badge-running">
+      <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+      执行中
+    </span>
+    <button class="btn-success">批准继续</button>
+  </div>
+</header>
+
+<main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6">
+  
+  <!-- 任务头部信息 -->
+  <div class="glass-card p-6 mb-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span style="font-size:11px;color:var(--text-dim);font-family:monospace;">TASK-20260324-001</span>
+          <span class="badge badge-running">
+            <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+            running
+          </span>
+        </div>
+        <h1 class="text-xl font-bold mb-2" style="color:var(--text-primary);">用户注册模块实现</h1>
+        <p style="color:var(--text-secondary);font-size:13px;">实现完整的用户注册功能，包括邮箱验证、手机号验证、密码加密存储</p>
+      </div>
+      <div class="text-right">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">运行时长</div>
+        <div class="neon-text-cyan font-mono text-lg">12:34:56</div>
+      </div>
+    </div>
+    
+    <!-- 进度条 -->
+    <div class="mb-4">
+      <div class="flex justify-between text-xs mb-2" style="color:var(--text-secondary);">
+        <span>总体进度</span>
+        <span class="neon-text-cyan">65%</span>
+      </div>
+      <div style="height:4px;background:rgba(0,240,255,0.1);border-radius:2px;overflow:hidden;">
+        <div style="width:65%;height:100%;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));border-radius:2px;"></div>
+      </div>
+    </div>
+    
+    <!-- 元信息 -->
+    <div class="flex flex-wrap gap-6 text-xs" style="color:var(--text-secondary);">
+      <div class="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span>模块: user-registration</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        <span>创建: 2026-03-24 10:00</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+        <span>分支: feat/user-registration</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- 左侧：执行时间线 -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- 流水线阶段 -->
+      <div class="glass-card p-5">
+        <h2 class="text-sm font-bold mb-4 flex items-center gap-2" style="color:var(--text-primary);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          流水线执行
+        </h2>
+        
+        <div class="timeline">
+          <div class="timeline-item completed">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium" style="color:var(--text-primary);">需求分析</span>
+              <span class="badge badge-completed">已完成</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">/analyze - 拆解需求、定义验收标准</div>
+            <div class="text-xs" style="color:var(--text-dim);">耗时: 5m 32s · Agent: analyze</div>
+          </div>
+          
+          <div class="timeline-item completed">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium" style="color:var(--text-primary);">架构设计</span>
+              <span class="badge badge-completed">已完成</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">/architect - 技术方案、数据库模型</div>
+            <div class="text-xs" style="color:var(--text-dim);">耗时: 12m 18s · Agent: architect</div>
+          </div>
+          
+          <div class="timeline-item completed">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium" style="color:var(--text-primary);">UI 设计</span>
+              <span class="badge badge-completed">已完成</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">/design-ui - HTML 原型 + 设计规范</div>
+            <div class="text-xs" style="color:var(--text-dim);">耗时: 8m 45s · Agent: design-ui</div>
+          </div>
+          
+          <div class="timeline-item running">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium neon-text-cyan">后端编码</span>
+              <span class="badge badge-running">
+                <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                执行中
+              </span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">/code-go - Go Domain 分层实现</div>
+            <div class="code-block mt-2">
+              <div class="text-xs" style="color:var(--text-dim);">正在生成: internal/domain/user/service.go</div>
+              <div style="margin-top:8px;color:var(--neon-cyan);">func (s *UserService) Register(ctx context.Context, cmd RegisterCmd) (*User, error) {</div>
+              <div style="color:var(--text-secondary);">  // 验证邮箱格式...</div>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium" style="color:var(--text-dim);">前端编码</span>
+              <span class="badge badge-pending">待执行</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);">/code-frontend - React Next.js 实现</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium" style="color:var(--text-dim);">测试</span>
+              <span class="badge badge-pending">待执行</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);">/test - 生成并执行测试</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium" style="color:var(--text-dim);">代码审查</span>
+              <span class="badge badge-pending">待执行</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);">/review - 代码审查 + 架构合规</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 产出物 -->
+      <div class="glass-card p-5">
+        <h2 class="text-sm font-bold mb-4 flex items-center gap-2" style="color:var(--text-primary);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-purple)" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          产出物
+        </h2>
+        
+        <div class="space-y-2">
+          <a href="#" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" style="border:1px solid var(--border-subtle);">
+            <div class="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-green)" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <div>
+                <div class="text-sm" style="color:var(--text-primary);">需求文档</div>
+                <div class="text-xs" style="color:var(--text-dim);">docs/requirements/user-registration.md</div>
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+            </svg>
+          </a>
+          
+          <a href="#" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" style="border:1px solid var(--border-subtle);">
+            <div class="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-green)" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <div>
+                <div class="text-sm" style="color:var(--text-primary);">架构设计</div>
+                <div class="text-xs" style="color:var(--text-dim);">docs/design-docs/user-registration.md</div>
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+            </svg>
+          </a>
+          
+          <a href="#" class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors" style="border:1px solid var(--border-subtle);">
+            <div class="flex items-center gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-green)" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+              <div>
+                <div class="text-sm" style="color:var(--text-primary);">UI 原型</div>
+                <div class="text-xs" style="color:var(--text-dim);">docs/design-docs/ui/user-registration.html</div>
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 右侧：文件变更 & 日志 -->
+    <div class="space-y-6">
+      
+      <!-- 文件变更 -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold flex items-center gap-2" style="color:var(--text-primary);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-yellow)" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            文件变更
+          </h2>
+          <span class="text-xs" style="color:var(--text-dim);">+12 -3</span>
+        </div>
+        
+        <div class="file-tree">
+          <div class="file-tree-item added">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>docs/requirements/user-registration.md</span>
+          </div>
+          <div class="file-tree-item added">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>docs/design-docs/user-registration.md</span>
+          </div>
+          <div class="file-tree-item added">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            <span>docs/design-docs/ui/register.html</span>
+          </div>
+          <div class="file-tree-item added active">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>internal/domain/user/types.go</span>
+          </div>
+          <div class="file-tree-item added">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>internal/domain/user/repository.go</span>
+          </div>
+          <div class="file-tree-item added">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>internal/domain/user/service.go</span>
+          </div>
+          <div class="file-tree-item modified">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>internal/router/router.go</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 实时日志 -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold flex items-center gap-2" style="color:var(--text-primary);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            实时日志
+          </h2>
+          <span class="badge badge-running">
+            <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+            LIVE
+          </span>
+        </div>
+        
+        <div class="code-block" style="max-height:300px;overflow-y:auto;font-size:11px;">
+          <div><span style="color:var(--text-dim);">[10:23:45]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">开始生成领域模型...</span></div>
+          <div><span style="color:var(--text-dim);">[10:23:46]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">创建: internal/domain/user/types.go</span></div>
+          <div><span style="color:var(--text-dim);">[10:23:48]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">定义 User 结构体</span></div>
+          <div><span style="color:var(--text-dim);">[10:23:50]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">定义 RegisterCmd 命令</span></div>
+          <div><span style="color:var(--text-dim);">[10:24:02]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">创建: internal/domain/user/repository.go</span></div>
+          <div><span style="color:var(--text-dim);">[10:24:15]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">定义 UserRepository 接口</span></div>
+          <div><span style="color:var(--text-dim);">[10:24:30]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">创建: internal/domain/user/service.go</span></div>
+          <div><span style="color:var(--text-dim);">[10:24:45]</span> <span class="neon-text-cyan">code-go</span> <span class="neon-text-green">→</span> <span style="color:var(--text-secondary);">实现 Register 方法</span></div>
+          <div><span style="color:var(--text-dim);">[10:25:12]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">添加邮箱格式验证</span></div>
+          <div><span style="color:var(--text-dim);">[10:25:30]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">添加密码强度检查</span></div>
+          <div><span style="color:var(--text-dim);">[10:26:00]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--neon-yellow);">⚠</span> <span style="color:var(--text-secondary);">需要 bcrypt 库进行密码加密</span></div>
+          <div><span style="color:var(--text-dim);">[10:26:05]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">执行: go get golang.org/x/crypto/bcrypt</span></div>
+          <div><span style="color:var(--text-dim);">[10:26:15]</span> <span class="neon-text-cyan">code-go</span> <span class="neon-text-green">✓</span> <span style="color:var(--text-secondary);">依赖安装成功</span></div>
+          <div><span style="color:var(--text-dim);">[10:26:20]</span> <span class="neon-text-cyan">code-go</span> <span style="color:var(--text-secondary);">实现密码加密逻辑...</span></div>
+        </div>
+      </div>
+      
+      <!-- 质量指标 -->
+      <div class="glass-card p-5">
+        <h2 class="text-sm font-bold mb-4 flex items-center gap-2" style="color:var(--text-primary);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-green)" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          质量指标
+        </h2>
+        
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span style="color:var(--text-secondary);">测试覆盖率</span>
+              <span class="neon-text-green">78%</span>
+            </div>
+            <div style="height:4px;background:rgba(0,255,136,0.1);border-radius:2px;">
+              <div style="width:78%;height:100%;background:var(--neon-green);border-radius:2px;"></div>
+            </div>
+          </div>
+          
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span style="color:var(--text-secondary);">代码规范</span>
+              <span class="neon-text-cyan">通过</span>
+            </div>
+            <div style="height:4px;background:rgba(0,240,255,0.1);border-radius:2px;">
+              <div style="width:100%;height:100%;background:var(--neon-cyan);border-radius:2px;"></div>
+            </div>
+          </div>
+          
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span style="color:var(--text-secondary);">架构合规</span>
+              <span class="neon-text-yellow">警告</span>
+            </div>
+            <div style="height:4px;background:rgba(255,214,0,0.1);border-radius:2px;">
+              <div style="width:85%;height:100%;background:var(--neon-yellow);border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

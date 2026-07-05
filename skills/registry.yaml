@@ -1,0 +1,96 @@
+# Skills Registry — 单一真相源
+#
+# 所有流水线 skill 的注册信息。init.sh 和 pipeline 据此动态装配，
+# 不再在三处分散维护 skill 列表。
+#
+# 字段说明:
+#   name:           skill 唯一标识（与目录名/SKILL.md frontmatter name 一致）
+#   phase:          流水线阶段
+#   weight_required: 启用此 skill 所需的最低 weight（light < standard < heavy）
+#   stack_required:  栈依赖条件（any=任意栈；has_backend=仅后端栈；has_frontend=仅前端栈；has_ui=仅有UI栈）
+#   location:        skill 定义位置（neutral=skills/ 栈中立；profile=stacks/<profile>/ 栈相关）
+#   approval:        是否需要人类审批
+#   required:        是否必选（false=可选/按条件启用）
+
+skills:
+  # ─── 方法论层（栈中立，所有 profile 共用）───
+  - name: analyze
+    phase: requirement
+    weight_required: light
+    stack_required: any
+    location: neutral
+    approval: true
+    required: true
+
+  - name: architect
+    phase: design
+    weight_required: light
+    stack_required: any
+    location: neutral
+    approval: true
+    required: true
+
+  - name: design-ui
+    phase: design
+    weight_required: standard
+    stack_required: has_ui
+    location: neutral
+    approval: true
+    required: false
+
+  - name: pipeline
+    phase: orchestration
+    weight_required: light
+    stack_required: any
+    location: neutral
+    approval: true
+    required: true
+
+  - name: test
+    phase: testing
+    weight_required: light
+    stack_required: any
+    location: neutral
+    approval: false
+    required: true
+
+  - name: review
+    phase: review
+    weight_required: standard
+    stack_required: any
+    location: neutral
+    approval: false
+    required: false
+
+  - name: entropy
+    phase: monitoring
+    weight_required: light
+    stack_required: any
+    location: neutral
+    approval: false
+    required: false
+
+  - name: modular-vibe-coding
+    phase: methodology
+    weight_required: light
+    stack_required: any
+    location: neutral
+    approval: false
+    required: false
+
+  # ─── 编码层（栈相关，由 profile 提供）───
+  - name: code-backend
+    phase: coding
+    weight_required: light
+    stack_required: has_backend
+    location: profile
+    approval: false
+    required: false
+
+  - name: code-frontend
+    phase: coding
+    weight_required: light
+    stack_required: has_frontend
+    location: profile
+    approval: false
+    required: false

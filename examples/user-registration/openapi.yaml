@@ -1,0 +1,301 @@
+openapi: 3.0.3
+info:
+  title: User Registration API
+  version: 1.0.0
+  description: |
+    用户注册模块 OpenAPI 契约。
+
+    本文件是 `user-registration` 模块对外 HTTP API 的唯一真相。
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+tags:
+  - name: auth
+    description: 用户注册、验证码与邮箱验证
+paths:
+  /api/v1/auth/send-code:
+    post:
+      tags: [auth]
+      summary: 发送注册/登录验证码
+      operationId: sendAuthCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendCodeRequest"
+      responses:
+        "200":
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendCodeResponse"
+        "429":
+          description: 发送过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 42901
+                message: 发送过于频繁，请60秒后重试
+        "500":
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/register/email:
+    post:
+      tags: [auth]
+      summary: 邮箱注册
+      operationId: registerByEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterEmailRequest"
+      responses:
+        "200":
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterEmailResponse"
+        "409":
+          description: 邮箱已注册
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 40901
+                message: 邮箱已注册
+        "422":
+          description: 密码强度不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 42201
+                message: 密码强度不足
+  /api/v1/auth/register/phone:
+    post:
+      tags: [auth]
+      summary: 手机号注册或登录
+      operationId: registerOrLoginByPhone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhoneAuthRequest"
+      responses:
+        "200":
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhoneAuthResponse"
+        "409":
+          description: 手机号已注册
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 40902
+                message: 手机号已注册
+        "429":
+          description: 验证码错误次数过多
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 42902
+                message: 验证码错误次数过多
+  /api/v1/auth/verify-email:
+    post:
+      tags: [auth]
+      summary: 验证邮箱
+      operationId: verifyEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: 验证成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyEmailResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    SendCodeRequest:
+      type: object
+      required: [target, type]
+      properties:
+        target:
+          type: string
+          description: 邮箱或手机号
+          example: user@example.com
+        type:
+          type: integer
+          description: 1=注册 2=登录 3=重置密码
+          enum: [1, 2, 3]
+          example: 1
+    SendCodeResponse:
+      type: object
+      required: [code, message, data]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: 验证码已发送
+        data:
+          type: object
+          required: [expires_in]
+          properties:
+            expires_in:
+              type: integer
+              example: 300
+    RegisterEmailRequest:
+      type: object
+      required: [email, password, confirm_password, agreement_accepted]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 8
+          example: SecurePass123
+        confirm_password:
+          type: string
+          minLength: 8
+          example: SecurePass123
+        agreement_accepted:
+          type: boolean
+          example: true
+    RegisterEmailResponse:
+      type: object
+      required: [code, message, data]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: 注册成功，请查收验证邮件
+        data:
+          type: object
+          required: [user_id, email, status]
+          properties:
+            user_id:
+              type: integer
+              format: int64
+              example: 10001
+            email:
+              type: string
+              format: email
+              example: user@example.com
+            status:
+              type: string
+              example: unverified
+    PhoneAuthRequest:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+          example: "13800138000"
+        code:
+          type: string
+          example: "123456"
+    PhoneAuthResponse:
+      type: object
+      required: [code, message, data]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: 登录成功
+        data:
+          type: object
+          required: [access_token, refresh_token, expires_in, user]
+          properties:
+            access_token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIs...
+            refresh_token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIs...
+            expires_in:
+              type: integer
+              example: 7200
+            user:
+              type: object
+              required: [id, username, phone]
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  example: 10001
+                username:
+                  type: string
+                  example: user_13800138000
+                phone:
+                  type: string
+                  example: 138****8000
+                avatar_url:
+                  type: string
+                  nullable: true
+    VerifyEmailRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        code:
+          type: string
+          example: "654321"
+    VerifyEmailResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: 邮箱验证成功
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          example: 40001
+        message:
+          type: string
+          example: 请求参数错误

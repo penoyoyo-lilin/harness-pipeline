@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harness Pipeline — 主控面板</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   HARNESS PIPELINE — Cyberpunk Neon Theme
+   ═══════════════════════════════════════════ */
+
+:root {
+  --bg-deep: #0A0E17;
+  --bg-card: rgba(15, 20, 35, 0.75);
+  --bg-glass: rgba(15, 20, 35, 0.55);
+  --neon-cyan: #00F0FF;
+  --neon-purple: #7B61FF;
+  --neon-green: #00FF88;
+  --neon-red: #FF3E6C;
+  --neon-yellow: #FFD600;
+  --neon-orange: #FF8A00;
+  --text-primary: #E8ECF4;
+  --text-secondary: #7A8BA8;
+  --text-dim: #3D4F6F;
+  --border-subtle: rgba(0, 240, 255, 0.08);
+  --border-active: rgba(0, 240, 255, 0.25);
+  --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3), 0 0 40px rgba(0, 240, 255, 0.1);
+  --glow-purple: 0 0 20px rgba(123, 97, 255, 0.3), 0 0 40px rgba(123, 97, 255, 0.1);
+  --glow-green: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 255, 136, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JetBrains Mono', 'PingFang SC', 'Microsoft YaHei', monospace;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── 背景网格 ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── 背景光晕 ── */
+body::after {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(0, 240, 255, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-glow-purple {
+  position: fixed;
+  bottom: -15%;
+  right: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(123, 97, 255, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── 毛玻璃 ── */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-active);
+  box-shadow: 0 8px 32px rgba(0, 240, 255, 0.08);
+}
+
+/* ── 霓虹文字 ── */
+.neon-text-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3), 0 0 40px rgba(0, 240, 255, 0.15);
+}
+
+.neon-text-purple {
+  color: var(--neon-purple);
+  text-shadow: 0 0 10px rgba(123, 97, 255, 0.5), 0 0 20px rgba(123, 97, 255, 0.3);
+}
+
+.neon-text-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+/* ── 呼吸灯边框 ── */
+@keyframes breathe-cyan {
+  0%, 100% { border-color: rgba(0, 240, 255, 0.2); box-shadow: 0 0 8px rgba(0, 240, 255, 0.05); }
+  50% { border-color: rgba(0, 240, 255, 0.5); box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.03); }
+}
+
+@keyframes breathe-purple {
+  0%, 100% { border-color: rgba(123, 97, 255, 0.2); box-shadow: 0 0 8px rgba(123, 97, 255, 0.05); }
+  50% { border-color: rgba(123, 97, 255, 0.5); box-shadow: 0 0 20px rgba(123, 97, 255, 0.15), inset 0 0 15px rgba(123, 97, 255, 0.03); }
+}
+
+.card-breathe-cyan {
+  animation: breathe-cyan 3s ease-in-out infinite;
+}
+
+.card-breathe-purple {
+  animation: breathe-purple 3s ease-in-out infinite;
+}
+
+/* ── 脉冲发光 ── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 240, 255, 0.3), 0 0 16px rgba(0, 240, 255, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(0, 240, 255, 0.6), 0 0 32px rgba(0, 240, 255, 0.25), 0 0 48px rgba(0, 240, 255, 0.1); }
+}
+
+.pulse-active {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── 进度条渐变动画 ── */
+@keyframes progress-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.progress-bar-cyan {
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.6), var(--neon-cyan), rgba(123, 97, 255, 0.8), var(--neon-cyan), rgba(0, 240, 255, 0.6));
+  background-size: 200% 100%;
+  animation: progress-shimmer 3s linear infinite;
+}
+
+.progress-bar-purple {
+  background: linear-gradient(90deg, rgba(123, 97, 255, 0.6), var(--neon-purple), rgba(0, 240, 255, 0.8), var(--neon-purple), rgba(123, 97, 255, 0.6));
+  background-size: 200% 100%;
+  animation: progress-shimmer 3s linear infinite;
+}
+
+/* ── 入场动画 ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim-enter {
+  opacity: 0;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── 徽章 ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.badge-idle {
+  background: rgba(61, 79, 111, 0.3);
+  color: var(--text-dim);
+  border: 1px solid rgba(61, 79, 111, 0.4);
+}
+
+.badge-working {
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--neon-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.badge-waiting {
+  background: rgba(255, 214, 0, 0.1);
+  color: var(--neon-yellow);
+  border: 1px solid rgba(255, 214, 0, 0.3);
+}
+
+.badge-completed {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--neon-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+/* ── 流水线节点 ── */
+.pipeline-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  max-width: 140px;
+}
+
+.pipeline-node .node-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.3s;
+  position: relative;
+  z-index: 2;
+}
+
+.pipeline-node.completed .node-icon {
+  background: rgba(0, 255, 136, 0.15);
+  border: 2px solid var(--neon-green);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+}
+
+.pipeline-node.active .node-icon {
+  background: rgba(0, 240, 255, 0.15);
+  border: 2px solid var(--neon-cyan);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.pipeline-node.pending .node-icon {
+  background: rgba(61, 79, 111, 0.2);
+  border: 2px solid var(--text-dim);
+  opacity: 0.4;
+}
+
+.pipeline-connector {
+  flex: 1;
+  height: 2px;
+  min-width: 24px;
+  margin-top: 20px;
+}
+
+.pipeline-connector.completed {
+  background: linear-gradient(90deg, var(--neon-green), rgba(0, 255, 136, 0.4));
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.3);
+}
+
+.pipeline-connector.active {
+  background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan), rgba(0, 240, 255, 0.3));
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.2);
+}
+
+.pipeline-connector.pending {
+  background: var(--text-dim);
+  opacity: 0.2;
+}
+
+/* ── 时间线 ── */
+.timeline-entry {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.04);
+}
+
+.timeline-entry:last-child {
+  border-bottom: none;
+}
+
+.timeline-time {
+  color: var(--text-dim);
+  white-space: nowrap;
+  min-width: 65px;
+}
+
+.timeline-role {
+  color: var(--neon-cyan);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.timeline-msg {
+  color: var(--text-secondary);
+}
+
+/* ── 审批卡片 ── */
+.approval-card {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(15, 20, 35, 0.6);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 10px;
+  transition: all 0.3s;
+}
+
+.approval-card:hover {
+  border-color: var(--border-active);
+}
+
+.approval-card .title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.approval-card .desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.btn-approve {
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--neon-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  transition: all 0.2s;
+  margin-right: 8px;
+}
+
+.btn-approve:hover {
+  background: rgba(0, 255, 136, 0.25);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+}
+
+.btn-reject {
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  background: rgba(255, 62, 108, 0.15);
+  color: var(--neon-red);
+  border: 1px solid rgba(255, 62, 108, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-reject:hover {
+  background: rgba(255, 62, 108, 0.25);
+  box-shadow: 0 0 12px rgba(255, 62, 108, 0.2);
+}
+
+/* ── 滚动条 ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.3);
+}
+
+/* ── 扫描线效果 ── */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scanline-overlay {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 240, 255, 0.008) 2px,
+    rgba(0, 240, 255, 0.008) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── 通知图标 ── */
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--neon-red);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(255, 62, 108, 0.5);
+}
+
+/* ── 响应式 ── */
+@media (max-width: 1024px) {
+  .agent-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .agent-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .pipeline-node .node-label {
+    font-size: 10px !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- 背景光晕 -->
+<div class="bg-glow-purple"></div>
+<div class="scanline-overlay"></div>
+
+<!-- ═══════════════════════════════════════════
+     顶部导航栏
+     ═══════════════════════════════════════════ -->
+<header class="glass sticky top-0 z-50 px-6 py-3 flex items-center justify-between" style="border-bottom: 1px solid var(--border-subtle);">
+  <!-- 左侧 Logo -->
+  <div class="flex items-center gap-3">
+    <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 17 10 11 4 5"></polyline>
+        <line x1="12" y1="19" x2="20" y2="19"></line>
+      </svg>
+    </div>
+    <span class="neon-text-cyan text-sm font-bold tracking-widest hidden sm:block">HARNESS PIPELINE</span>
+  </div>
+
+  <!-- 中间流水线名称 -->
+  <div class="flex items-center gap-2">
+    <span style="color:var(--neon-purple);font-size:10px;font-weight:600;letter-spacing:1px;">ACTIVE</span>
+    <span class="text-xs sm:text-sm font-medium" style="color:var(--text-primary);">feat(user): 用户注册模块</span>
+  </div>
+
+  <!-- 右侧图标 -->
+  <div class="flex items-center gap-5">
+    <div class="notification-bell">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      <span class="notification-badge">2</span>
+    </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+    </svg>
+  </div>
+</header>
+
+<main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+  <!-- ═══════════════════════════════════════════
+       流水线进度条
+       ═══════════════════════════════════════════ -->
+  <section class="glass-card p-5 anim-enter" style="animation-delay:0.1s;">
+    <div class="flex items-center gap-2 mb-4">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="text-xs font-semibold tracking-wide" style="color:var(--text-secondary);">流水线进度</span>
+      <span class="text-xs ml-auto" style="color:var(--text-dim);">总耗时 48:32</span>
+    </div>
+    <div class="flex items-start justify-center gap-0 overflow-x-auto pb-2" id="pipeline">
+      <!-- 节点通过JS渲染 -->
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       Agent 状态矩阵
+       ═══════════════════════════════════════════ -->
+  <section>
+    <div class="flex items-center gap-2 mb-4 anim-enter" style="animation-delay:0.2s;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--neon-purple)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span class="text-xs font-semibold tracking-wide" style="color:var(--text-secondary);">Agent 状态矩阵</span>
+      <span class="text-xs ml-2 px-2 py-0.5 rounded" style="background:rgba(0,240,255,0.1);color:var(--neon-cyan);">3 活跃</span>
+    </div>
+    <div class="agent-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" id="agent-grid">
+      <!-- Agent 卡片通过JS渲染 -->
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       底部双栏
+       ═══════════════════════════════════════════ -->
+  <div class="bottom-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- 审批队列 -->
+    <section class="glass-card p-5 anim-enter" style="animation-delay:0.8s;">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--neon-yellow)" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span class="text-xs font-semibold tracking-wide" style="color:var(--text-secondary);">审批队列</span>
+        <span class="notification-badge" style="position:static;width:18px;height:18px;font-size:10px;">2</span>
+      </div>
+
+      <div class="approval-card">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="badge badge-waiting">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--neon-yellow);"></span>
+            等待审批
+          </span>
+          <span class="text-xs" style="color:var(--text-dim);">需求分析</span>
+        </div>
+        <div class="title">需求确认 — 用户注册模块</div>
+        <div class="desc">包含用户名/邮箱/手机号注册、密码策略、验证码流程的完整需求定义。</div>
+        <div>
+          <button class="btn-approve" onclick="handleApprove(this)">✓ 批准</button>
+          <button class="btn-reject" onclick="handleReject(this)">✕ 驳回</button>
+        </div>
+      </div>
+
+      <div class="approval-card">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="badge badge-waiting">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--neon-yellow);"></span>
+            等待审批
+          </span>
+          <span class="text-xs" style="color:var(--text-dim);">架构设计</span>
+        </div>
+        <div class="title">架构审批 — 支付模块技术方案</div>
+        <div class="desc">支付网关集成、订单状态机、退款流程的数据库模型与 API 契约设计。</div>
+        <div>
+          <button class="btn-approve" onclick="handleApprove(this)">✓ 批准</button>
+          <button class="btn-reject" onclick="handleReject(this)">✕ 驳回</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 活动时间线 -->
+    <section class="glass-card p-5 anim-enter" style="animation-delay:0.9s;">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--neon-green)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="text-xs font-semibold tracking-wide" style="color:var(--text-secondary);">活动时间线</span>
+        <span class="text-xs ml-auto" style="color:var(--text-dim);">实时</span>
+      </div>
+      <div style="background:rgba(5,8,15,0.7);border-radius:8px;padding:12px 14px;font-family:'JetBrains Mono',monospace;" id="timeline">
+        <!-- 时间线通过JS渲染 -->
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════
+     页脚
+     ═══════════════════════════════════════════ -->
+<footer class="relative z-10 text-center py-6" style="color:var(--text-dim);font-size:10px;letter-spacing:1px;">
+  HARNESS PIPELINE v1.0.0 — AI Agent Team 自动化产研流水线
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// 数据定义
+// ═══════════════════════════════════════════
+
+const pipelineStages = [
+  { name: '需求', icon: '📋', status: 'completed', time: '12:00' },
+  { name: '设计', icon: '🎨', status: 'completed', time: '15:00' },
+  { name: '编码', icon: '⚙️', status: 'active',   time: '进行中' },
+  { name: '测试', icon: '🧪', status: 'pending',  time: '—' },
+  { name: '审查', icon: '🔍', status: 'pending',  time: '—' },
+  { name: '合并', icon: '🔀', status: 'pending',  time: '—' }
+];
+
+const agents = [
+  {
+    name: 'Lead',
+    icon: '🎯',
+    fullName: '团队调度',
+    status: 'idle',
+    statusText: '空闲',
+    task: '等待任务分配',
+    progress: 0,
+    time: '—',
+    accent: 'cyan'
+  },
+  {
+    name: 'Analyze',
+    icon: '📋',
+    fullName: '需求分析',
+    status: 'completed',
+    statusText: '已完成',
+    task: '用户注册模块需求文档',
+    progress: 100,
+    time: '12 分钟',
+    accent: 'green'
+  },
+  {
+    name: 'Architect',
+    icon: '🏗️',
+    fullName: '架构设计',
+    status: 'completed',
+    statusText: '已完成',
+    task: '用户模块技术方案',
+    progress: 100,
+    time: '18 分钟',
+    accent: 'green'
+  },
+  {
+    name: 'UI Design',
+    icon: '🎨',
+    fullName: 'UI 设计',
+    status: 'completed',
+    statusText: '已完成',
+    task: '注册页面设计规范',
+    progress: 100,
+    time: '15 分钟',
+    accent: 'green'
+  },
+  {
+    name: 'Go Coder',
+    icon: '🐍',
+    fullName: 'Go 编码',
+    status: 'working',
+    statusText: '工作中',
+    task: '实现 user domain 分层',
+    progress: 65,
+    time: '24 分钟',
+    accent: 'cyan'
+  },
+  {
+    name: 'Frontend',
+    icon: '⚛️',
+    fullName: '前端编码',
+    status: 'working',
+    statusText: '工作中',
+    task: '注册表单 React 组件',
+    progress: 42,
+    time: '18 分钟',
+    accent: 'purple'
+  },
+  {
+    name: 'Tester',
+    icon: '🧪',
+    fullName: '测试',
+    status: 'waiting',
+    statusText: '等待中',
+    task: '等待编码完成',
+    progress: 0,
+    time: '—',
+    accent: 'yellow'
+  },
+  {
+    name: 'Reviewer',
+    icon: '🔍',
+    fullName: '代码审查',
+    status: 'idle',
+    statusText: '空闲',
+    task: '等待测试通过',
+    progress: 0,
+    time: '—',
+    accent: 'cyan'
+  },
+  {
+    name: 'Entropy',
+    icon: '📡',
+    fullName: '熵收集',
+    status: 'idle',
+    statusText: '空闲',
+    task: '周期性代码扫描',
+    progress: 0,
+    time: '—',
+    accent: 'cyan'
+  }
+];
+
+const timelineData = [
+  { time: '12:28', role: 'Go Coder', msg: '正在生成 internal/domain/user/repository 层代码...', color: 'var(--neon-cyan)' },
+  { time: '12:26', role: 'Frontend', msg: '创建注册表单组件，添加表单验证逻辑', color: 'var(--neon-purple)' },
+  { time: '12:22', role: 'Go Coder', msg: '定义 User 实体结构与数据库迁移文件', color: 'var(--neon-cyan)' },
+  { time: '12:15', role: 'UI Design', msg: '注册页面设计规范已提交，等待审批', color: 'var(--neon-green)' },
+  { time: '12:10', role: 'Architect', msg: '用户模块技术方案文档已生成 ✓', color: 'var(--neon-green)' }
+];
+
+// ═══════════════════════════════════════════
+// 渲染流水线
+// ═══════════════════════════════════════════
+function renderPipeline() {
+  const container = document.getElementById('pipeline');
+  let html = '';
+
+  pipelineStages.forEach((stage, i) => {
+    if (i > 0) {
+      const connStatus = stage.status === 'completed' ? 'completed'
+        : pipelineStages[i - 1].status === 'completed' && stage.status === 'active' ? 'active'
+        : 'pending';
+      html += `<div class="pipeline-connector ${connStatus}"></div>`;
+    }
+
+    html += `
+      <div class="pipeline-node ${stage.status}">
+        <div class="node-icon">${stage.icon}</div>
+        <span class="node-label" style="font-size:11px;font-weight:500;color:${stage.status === 'completed' ? 'var(--neon-green)' : stage.status === 'active' ? 'var(--neon-cyan)' : 'var(--text-dim)'};">
+          ${stage.name}
+        </span>
+        <span style="font-size:10px;color:var(--text-dim);">${stage.time}</span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+// 渲染 Agent 卡片
+// ═══════════════════════════════════════════
+function renderAgents() {
+  const container = document.getElementById('agent-grid');
+  let html = '';
+
+  agents.forEach((agent, i) => {
+    const breatheClass = agent.status === 'working'
+      ? (agent.accent === 'purple' ? 'card-breathe-purple' : 'card-breathe-cyan')
+      : '';
+
+    const badgeClass = agent.status === 'completed' ? 'badge-completed'
+      : agent.status === 'working' ? 'badge-working'
+      : agent.status === 'waiting' ? 'badge-waiting'
+      : 'badge-idle';
+
+    const progressClass = agent.accent === 'purple' ? 'progress-bar-purple' : 'progress-bar-cyan';
+
+    html += `
+      <div class="glass-card ${breatheClass} anim-enter" style="padding:18px;animation-delay:${0.3 + i * 0.06}s;">
+        <!-- 头部：图标 + 角色名 -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:24px;">${agent.icon}</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary);letter-spacing:0.3px;">${agent.name}</div>
+            <div style="font-size:10px;color:var(--text-dim);">${agent.fullName}</div>
+          </div>
+          <div style="margin-left:auto;">
+            <span class="badge ${badgeClass}">${agent.statusText}</span>
+          </div>
+        </div>
+
+        <!-- 任务摘要 -->
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          ${agent.task}
+        </div>
+
+        <!-- 进度条 -->
+        ${agent.progress > 0 ? `
+        <div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:10px;color:var(--text-dim);">进度</span>
+            <span style="font-size:10px;font-weight:600;color:${agent.accent === 'green' ? 'var(--neon-green)' : agent.accent === 'purple' ? 'var(--neon-purple)' : 'var(--neon-cyan)'};">${agent.progress}%</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;">
+            <div class="${progressClass}" style="height:100%;width:${agent.progress}%;border-radius:2px;"></div>
+          </div>
+        </div>
+        ` : `
+        <div style="height:28px;"></div>
+        `}
+
+        <!-- 已用时间 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:10px;color:var(--text-dim);">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2" style="vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${agent.time}
+          </span>
+          ${agent.status === 'completed' ? '<span style="font-size:12px;">✅</span>' : ''}
+          ${agent.status === 'working' ? '<span style="font-size:10px;color:var(--neon-cyan);animation:pulse-glow 2s infinite;">● 运行中</span>' : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+// 渲染时间线
+// ═══════════════════════════════════════════
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  let html = '';
+
+  timelineData.forEach((entry, i) => {
+    html += `
+      <div class="timeline-entry anim-enter" style="animation-delay:${1.0 + i * 0.05}s;">
+        <span class="timeline-time">${entry.time}</span>
+        <span class="timeline-role" style="color:${entry.color};">[${entry.role}]</span>
+        <span class="timeline-msg">${entry.msg}</span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+// 审批按钮交互
+// ═══════════════════════════════════════════
+function handleApprove(btn) {
+  const card = btn.closest('.approval-card');
+  card.style.borderColor = 'rgba(0, 255, 136, 0.4)';
+  card.style.boxShadow = '0 0 16px rgba(0, 255, 136, 0.1)';
+  const badge = card.querySelector('.badge');
+  badge.className = 'badge badge-completed';
+  badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--neon-green);"></span> 已批准';
+  btn.style.display = 'none';
+  btn.nextElementSibling.style.display = 'none';
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:10px;color:var(--neon-green);margin-top:4px;';
+  note.textContent = '✓ 审批已通过 — ' + new Date().toLocaleTimeString('zh-CN');
+  btn.parentElement.appendChild(note);
+}
+
+function handleReject(btn) {
+  const card = btn.closest('.approval-card');
+  card.style.borderColor = 'rgba(255, 62, 108, 0.4)';
+  card.style.boxShadow = '0 0 16px rgba(255, 62, 108, 0.1)';
+  const badge = card.querySelector('.badge');
+  badge.className = 'badge badge-idle';
+  badge.style.background = 'rgba(255, 62, 108, 0.1)';
+  badge.style.color = 'var(--neon-red)';
+  badge.style.borderColor = 'rgba(255, 62, 108, 0.3)';
+  badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--neon-red);"></span> 已驳回';
+  btn.style.display = 'none';
+  btn.previousElementSibling.style.display = 'none';
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:10px;color:var(--neon-red);margin-top:4px;';
+  note.textContent = '✕ 审批已驳回 — ' + new Date().toLocaleTimeString('zh-CN');
+  btn.parentElement.appendChild(note);
+}
+
+// ═══════════════════════════════════════════
+// 初始化
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderPipeline();
+  renderAgents();
+  renderTimeline();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+name: python-fastapi-vue
+display_name: "Python (FastAPI) + Vue"
+description: "Python 后端分层（routers→services→repositories→models→schemas）+ Vue 3 前端"
+
+# 后端声明
+backend:
+  language: python
+  code_skill: code-backend
+  module_dir: "app/modules/{module}"
+  layering: "routers→services→repositories→models→schemas"
+  conventions_ref: "docs/references/python-conventions.md"
+  baseline_check: "scripts/baseline-check.sh"
+  contract_sync: "scripts/contract-sync.sh"
+  integration_test: "scripts/integration-test.sh"
+  build_cmd: "python -m py_compile $(find app -name '*.py')"
+  lint_cmd: "ruff check app/"
+  coverage:
+    service: 80
+    router: 70
+
+# 前端声明
+frontend:
+  language: typescript
+  code_skill: code-frontend
+  module_dir: "src/modules/{module}"
+  conventions_ref: "docs/references/vue-conventions.md"
+  integration_test: "scripts/integration-test-frontend.sh"
+  build_cmd: "npm run build"
+  lint_cmd: "npx eslint src/"
+
+# 契约格式
+contract:
+  format: openapi
+  path: "docs/api-specs/{module}.yaml"
+  shared_path: null
+
+# UI 能力
+ui: optional
+
+# 目录初始化
+scaffold:
+  dirs:
+    - "app/modules"
+    - "app/core"
+    - "src/modules"
+    - "src/components"
+    - "src/stores"
+    - "src/router"
+    - "docs/api-specs"
+    - "docs/modules"
+    - "docs/requirements"
+    - "docs/design-docs/adr"
+    - "docs/design-specs"
+    - "docs/plans"
+    - "docs/references"
+    - "docs/templates"
+    - "docs/ui-prototypes"
+    - ".harness/tasks"
+    - ".harness/artifacts"
+    - ".harness/logs"
+    - ".harness/reports"
+  files: []
+
+# 能力开关
+capabilities:
+  has_backend: true
+  has_frontend: true
+  has_contract: true
+  has_ui: true
